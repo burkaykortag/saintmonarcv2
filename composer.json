@@ -1,0 +1,20 @@
+{
+    "name": "saintmonarc/platform",
+    "description": "SaintMonarc Enterprise E-Commerce Platform",
+    "type": "project",
+    "require": {
+        "php": ">=8.3",
+        "ext-pdo": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Core\\": "core/",
+            "App\\": "app/",
+            "Modules\\": "modules/",
+            "Admin\\": "admin/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

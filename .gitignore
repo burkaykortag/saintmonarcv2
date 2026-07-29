@@ -1,0 +1,40 @@
+# Ortam dosyaları (hassas bilgiler)
+.env
+
+# PHP bağımlılıkları
+/vendor/
+composer.lock
+
+# Geçici yükleme dosyaları
+/public/uploads/temp/
+/storage/cache/*
+/storage/logs/*
+
+# Oturum dosyaları
+/storage/sessions/
+
+# OS dosyaları
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE dosyaları
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Scratch ve geçici test dosyaları
+/scratch/
+
+# Node modules (eğer kullanılıyorsa)
+node_modules/
+
+# Derleme çıktısı
+/public/build/
+
+# Log dosyaları
+*.log
+
+# PHP hata dosyaları
+php_errors.log
