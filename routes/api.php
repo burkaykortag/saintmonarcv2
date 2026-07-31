@@ -91,6 +91,16 @@ $router->get('/api/workflows/logs', [WorkflowController::class, 'apiLogs']);
 $router->get('/api/workflows/templates', [WorkflowController::class, 'apiTemplates']);
 $router->get('/api/workflows/.*', [WorkflowController::class, 'apiShow']);
 
+// Central Address System (Turkey Cities & Districts) API Endpoints
+$router->get('/api/address/cities', function(\Core\Http\Request $request, \Core\Http\Response $response) {
+    $response->json(['success' => true, 'cities' => \App\Helpers\AddressHelper::getCities()]);
+});
+
+$router->get('/api/address/districts', function(\Core\Http\Request $request, \Core\Http\Response $response) {
+    $city = $request->get('city') ?? '';
+    $response->json(['success' => true, 'districts' => \App\Helpers\AddressHelper::getDistricts($city)]);
+});
+
 
 
 

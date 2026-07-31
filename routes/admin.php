@@ -348,11 +348,15 @@ $router->get('/admin/purchasing/ai-assistant', [ProcurementController::class, 'a
 $router->post('/admin/purchasing/suppliers/create', [ProcurementController::class, 'createSupplier'], ['admin', 'permission:manage_suppliers', 'csrf']);
 $router->post('/admin/purchasing/suppliers/update', [ProcurementController::class, 'updateSupplier'], ['admin', 'permission:manage_suppliers', 'csrf']);
 $router->post('/admin/purchasing/suppliers/delete', [ProcurementController::class, 'deleteSupplier'], ['admin', 'permission:manage_suppliers', 'csrf']);
+$router->post('/admin/purchasing/suppliers/recalculate-score', [ProcurementController::class, 'recalculateSupplierScore'], ['admin', 'permission:manage_suppliers', 'csrf']);
+$router->post('/admin/purchasing/suppliers/note', [ProcurementController::class, 'createSupplierNote'], ['admin', 'permission:manage_suppliers', 'csrf']);
 $router->post('/admin/purchasing/orders/create',    [ProcurementController::class, 'createPurchaseOrder'], ['admin', 'permission:manage_procurement', 'csrf']);
 $router->post('/admin/purchasing/orders/approve',   [ProcurementController::class, 'approvePurchaseOrder'], ['admin', 'permission:approve_purchase_orders', 'csrf']);
 $router->post('/admin/purchasing/receipts/receive', [ProcurementController::class, 'receiveGoods'], ['admin', 'permission:receive_goods', 'csrf']);
 $router->post('/admin/purchasing/rfq/create',       [ProcurementController::class, 'createRFQ'], ['admin', 'permission:manage_rfq', 'csrf']);
 $router->post('/admin/purchasing/rfq/response',     [ProcurementController::class, 'submitRFQResponse'], ['admin', 'permission:manage_rfq', 'csrf']);
+$router->post('/admin/purchasing/contracts/create', [ProcurementController::class, 'createContract'], ['admin', 'permission:manage_supplier_contracts', 'csrf']);
+$router->post('/admin/purchasing/payments/update-status', [ProcurementController::class, 'updatePaymentStatus'], ['admin', 'permission:view_procurement', 'csrf']);
 
 // REST API Endpoints
 $router->get('/api/purchasing/suppliers',        [ProcurementController::class, 'apiSuppliers']);

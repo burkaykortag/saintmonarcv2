@@ -309,24 +309,66 @@ $csrfToken = $security->generateCsrfToken();
                 <!-- Tab: Performance -->
                 <div class="tab-pane fade" id="panel-performance" role="tabpanel">
                     <div class="card bg-dark border-secondary border-opacity-10 p-4">
-                        <h5 class="font-weight-800 mb-4 text-white">Tedarikçi Performansı (Scorecard)</h5>
-                        <div class="row g-3 fs-8">
-                            <div class="col-12 col-md-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="font-weight-800 mb-0 text-white">Tedarikçi Performans Skorecardı</h5>
+                            <form action="<?= url('/admin/purchasing/suppliers/recalculate-score') ?>" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                <input type="hidden" name="id" value="<?= $supplier['id'] ?>">
+                                <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> Skoru Yeniden Hesapla
+                                </button>
+                            </form>
+                        </div>
+                        <div class="row g-3 fs-8 mb-4">
+                            <div class="col-6 col-md-3">
                                 <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50 text-center">
                                     <small class="text-muted d-block mb-1">AI Performans Skoru</small>
-                                    <h4 class="text-warning font-weight-800 mb-0"><?= number_format($performance['score'] ?? 5.0, 1) ?> / 5.0</h4>
+                                    <h4 class="text-warning font-weight-800 mb-0"><?= number_format($performance['score'] ?? 5.0, 2) ?> / 5.0</h4>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-6 col-md-3">
                                 <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50 text-center">
-                                    <small class="text-muted d-block mb-1">Hasar & İade Oranı</small>
-                                    <h4 class="text-danger font-weight-800 mb-0"><?= number_format(($performance['refund_rate'] ?? 0) * 100, 1) ?>%</h4>
+                                    <small class="text-muted d-block mb-1">Zamanında Teslimat</small>
+                                    <h4 class="<?= ($performance['on_time_rate'] ?? 100) >= 90 ? 'text-success' : 'text-warning' ?> font-weight-800 mb-0"><?= number_format($performance['on_time_rate'] ?? 100, 1) ?>%</h4>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-6 col-md-3">
                                 <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50 text-center">
-                                    <small class="text-muted d-block mb-1">Kalite Kabul Oranı</small>
-                                    <h4 class="text-success font-weight-800 mb-0"><?= $performance['quality_score'] ?? 100 ?>%</h4>
+                                    <small class="text-muted d-block mb-1">Hasar / İade Oranı</small>
+                                    <h4 class="text-danger font-weight-800 mb-0"><?= number_format($performance['damaged_rate'] ?? 0, 1) ?>%</h4>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50 text-center">
+                                    <small class="text-muted d-block mb-1">Eksik Teslimat Oranı</small>
+                                    <h4 class="text-info font-weight-800 mb-0"><?= number_format($performance['missing_rate'] ?? 0, 1) ?>%</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 fs-8">
+                            <div class="col-6 col-md-3">
+                                <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50">
+                                    <small class="text-muted d-block mb-1">Toplam Alım Tutarı</small>
+                                    <strong class="text-white">₺<?= number_format($performance['total_purchases'] ?? 0, 2) ?></strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50">
+                                    <small class="text-muted d-block mb-1">Tamamlanan Alım Tutarı</small>
+                                    <strong class="text-success">₺<?= number_format($performance['total_spent'] ?? 0, 2) ?></strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50">
+                                    <small class="text-muted d-block mb-1">Ortalama Teslim Süresi</small>
+                                    <strong class="text-white"><?= $performance['lead_time'] ?? '-' ?> Gün</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="border border-secondary border-opacity-10 p-3 rounded bg-dark bg-opacity-50">
+                                    <small class="text-muted d-block mb-1">ABC Sınıfı / Sipariş Sayısı</small>
+                                    <strong class="text-warning"><?= $performance['abc_class'] ?? 'C' ?></strong>
+                                    <span class="text-muted ms-2">(<?= $performance['total_order_count'] ?? 0 ?> Sipariş)</span>
                                 </div>
                             </div>
                         </div>
@@ -426,9 +468,42 @@ $csrfToken = $security->generateCsrfToken();
                         <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Ülke</label>
                         <input type="text" name="country" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= htmlspecialchars($supplier['country'] ?? '') ?>">
                     </div>
+                    <?php if (strtolower($supplier['country'] ?? 'türkiye') === 'türkiye' || empty($supplier['country'])): ?>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">İl</label>
+                        <select name="city" class="form-select bg-dark border-secondary border-opacity-25 text-white address-city" data-target="#district_select" required>
+                            <option value="">-- İl Seçin --</option>
+                        </select>
+                        <input type="hidden" id="city_prefill" value="<?= htmlspecialchars($supplier['city'] ?? '') ?>">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">İlçe</label>
+                        <select name="district" id="district_select" class="form-select bg-dark border-secondary border-opacity-25 text-white address-district">
+                            <option value="">-- Önce İl Seçin --</option>
+                        </select>
+                        <input type="hidden" id="district_prefill" value="<?= htmlspecialchars($supplier['district'] ?? '') ?>">
+                    </div>
+                    <?php else: ?>
                     <div class="col-12 col-md-6">
                         <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Şehir</label>
                         <input type="text" name="city" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= htmlspecialchars($supplier['city'] ?? '') ?>">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">İlçe / Bölge</label>
+                        <input type="text" name="district" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= htmlspecialchars($supplier['district'] ?? '') ?>">
+                    </div>
+                    <?php endif; ?>
+                    <div class="col-12 col-md-8">
+                        <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Adres</label>
+                        <input type="text" name="address" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= htmlspecialchars($supplier['address'] ?? '') ?>" placeholder="Sokak, cadde, bina no...">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Posta Kodu</label>
+                        <input type="text" name="zip_code" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= htmlspecialchars($supplier['zip_code'] ?? '') ?>">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">IBAN</label>
+                        <input type="text" name="iban" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= htmlspecialchars($supplier['iban'] ?? '') ?>" placeholder="TR00 0000 0000 0000 0000 0000 00">
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Döviz Birimi</label>
@@ -449,14 +524,19 @@ $csrfToken = $security->generateCsrfToken();
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Çalışma Durumu</label>
-                        <select name="is_active" class="form-select bg-dark border-secondary border-opacity-25 text-white">
-                            <option value="1" <?= $supplier['is_active'] ? 'selected' : '' ?>>Aktif</option>
-                            <option value="0" <?= !$supplier['is_active'] ? 'selected' : '' ?>>Pasif</option>
+                        <select name="status" class="form-select bg-dark border-secondary border-opacity-25 text-white">
+                            <option value="active" <?= ($supplier['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Aktif</option>
+                            <option value="passive" <?= ($supplier['status'] ?? '') === 'passive' ? 'selected' : '' ?>>Pasif</option>
+                            <option value="blacklisted" <?= ($supplier['status'] ?? '') === 'blacklisted' ? 'selected' : '' ?>>Kara Liste</option>
                         </select>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Tedarikçi Puanı (5 üzerinden)</label>
-                        <input type="number" step="0.1" max="5.0" min="1.0" name="score" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= (float)$supplier['score'] ?>">
+                        <input type="number" step="0.01" max="5.0" min="1.0" name="score" class="form-control bg-dark border-secondary border-opacity-25 text-white" value="<?= number_format((float)$supplier['score'], 2) ?>">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Notlar / Açıklama</label>
+                        <textarea name="notes" rows="3" class="form-control bg-dark border-secondary border-opacity-25 text-white"><?= htmlspecialchars($supplier['notes'] ?? '') ?></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-secondary border-opacity-10">

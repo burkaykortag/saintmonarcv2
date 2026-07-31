@@ -149,30 +149,102 @@ class ProcurementRepository {
         $sup = $this->getSupplierById($supplierId);
         if (!$sup) return [];
 
-        $totalPurchases = 0;
-        $totalPayments = 0;
-        
-        $pos = $this->getSupplierPOs($supplierId);
-        foreach ($pos as $p) {
-            $totalPurchases += (float)$p['grand_total'];
+        // 1. Total purchases
+        $totalPurchasesSql = "SELECT COALESCE(SUM(grand_total), 0) as total, COUNT(*) as cnt, MAX(created_at) as last_date 
+                              FROM purchase_orders 
+                              WHERE supplier_id = :sid AND deleted_at IS NULL";
+        $totalPurchasesRow = $this->db->query($totalPurchasesSql, [':sid' => $supplierId]);
+        $totalPurchases = (float)($totalPurchasesRow[0]['total'] ?? 0.0);
+        $totalOrderCount = (int)($totalPurchasesRow[0]['cnt'] ?? 0);
+        $lastPurchaseDate = $totalPurchasesRow[0]['last_date'] ?? null;
+
+        // 2. Average actual lead time in days (difference between receipt date and order date)
+        $leadTimeSql = "SELECT AVG(DATEDIFF(gr.created_at, po.created_at)) as avg_days
+                        FROM goods_receipts gr
+                        JOIN purchase_orders po ON gr.purchase_order_id = po.id
+                        WHERE po.supplier_id = :sid";
+        $leadTimeRow = $this->db->query($leadTimeSql, [':sid' => $supplierId]);
+        $avgLeadTime = $leadTimeRow[0]['avg_days'] !== null ? round((float)$leadTimeRow[0]['avg_days'], 1) : (float)($sup['lead_time'] ?? 0);
+
+        // 3. On-time delivery rate & Delayed delivery count
+        $delayedSql = "SELECT COUNT(*) as cnt
+                       FROM goods_receipts gr
+                       JOIN purchase_orders po ON gr.purchase_order_id = po.id
+                       WHERE po.supplier_id = :sid AND DATE(gr.created_at) > po.expected_delivery";
+        $delayedRow = $this->db->query($delayedSql, [':sid' => $supplierId]);
+        $delayedCount = (int)($delayedRow[0]['cnt'] ?? 0);
+
+        $totalReceiptsSql = "SELECT COUNT(*) as cnt 
+                             FROM goods_receipts gr 
+                             JOIN purchase_orders po ON gr.purchase_order_id = po.id 
+                             WHERE po.supplier_id = :sid";
+        $totalReceiptsRow = $this->db->query($totalReceiptsSql, [':sid' => $supplierId]);
+        $totalReceipts = (int)($totalReceiptsRow[0]['cnt'] ?? 0);
+
+        $onTimeRate = 1.0;
+        if ($totalReceipts > 0) {
+            $onTimeRate = ($totalReceipts - $delayedCount) / $totalReceipts;
         }
-        
-        $pays = $this->getSupplierPayments($supplierId);
-        foreach ($pays as $py) {
-            if ($py['status'] === 'paid') {
-                $totalPayments += (float)$py['amount'];
-            }
+
+        // 4. Return/damaged rate & Missing rate
+        $ratesSql = "SELECT COALESCE(SUM(gri.quantity), 0) as received_qty,
+                            COALESCE(SUM(gri.damaged_quantity), 0) as damaged_qty,
+                            COALESCE(SUM(gri.missing_quantity), 0) as missing_qty
+                     FROM goods_receipt_items gri
+                     JOIN goods_receipts gr ON gri.goods_receipt_id = gr.id
+                     JOIN purchase_orders po ON gr.purchase_order_id = po.id
+                     WHERE po.supplier_id = :sid";
+        $ratesRow = $this->db->query($ratesSql, [':sid' => $supplierId]);
+        $receivedQty = (int)($ratesRow[0]['received_qty'] ?? 0);
+        $damagedQty = (int)($ratesRow[0]['damaged_qty'] ?? 0);
+        $missingQty = (int)($ratesRow[0]['missing_qty'] ?? 0);
+
+        $damagedRate = 0.0;
+        if ($receivedQty > 0) {
+            $damagedRate = $damagedQty / $receivedQty;
         }
+
+        $totalOrderedSql = "SELECT COALESCE(SUM(quantity), 0) as ordered_qty 
+                             FROM purchase_order_items poi
+                             JOIN purchase_orders po ON poi.purchase_order_id = po.id
+                             WHERE po.supplier_id = :sid AND po.status IN ('completed', 'partially_received')";
+        $totalOrderedRow = $this->db->query($totalOrderedSql, [':sid' => $supplierId]);
+        $orderedQty = (int)($totalOrderedRow[0]['ordered_qty'] ?? 0);
+
+        $missingRate = 0.0;
+        if ($orderedQty > 0) {
+            $missingRate = $missingQty / $orderedQty;
+        }
+
+        // 5. Average product cost from PO items
+        $avgCostSql = "SELECT COALESCE(AVG(price), 0) as avg_price 
+                       FROM purchase_order_items poi
+                       JOIN purchase_orders po ON poi.purchase_order_id = po.id
+                       WHERE po.supplier_id = :sid";
+        $avgCostRow = $this->db->query($avgCostSql, [':sid' => $supplierId]);
+        $avgItemCost = (float)($avgCostRow[0]['avg_price'] ?? 0.0);
+
+        // 6. Total spent (completed orders grand total)
+        $spentSql = "SELECT COALESCE(SUM(grand_total), 0) as spent 
+                     FROM purchase_orders 
+                     WHERE supplier_id = :sid AND status = 'completed' AND deleted_at IS NULL";
+        $spentRow = $this->db->query($spentSql, [':sid' => $supplierId]);
+        $totalSpent = (float)($spentRow[0]['spent'] ?? 0.0);
 
         return [
             'score' => (float)($sup['score'] ?? 5.00),
-            'lead_time' => (int)($sup['lead_time'] ?? 0),
-            'refund_rate' => 0.02, // 2% return rate mock
-            'damaged_rate' => 0.01, // 1% damaged rate mock
-            'quality_score' => 96,
+            'lead_time' => (int)$avgLeadTime,
+            'on_time_rate' => $onTimeRate * 100, // percentage
+            'delayed_count' => $delayedCount,
+            'refund_rate' => $damagedRate * 100,
+            'damaged_rate' => $damagedRate * 100,
+            'missing_rate' => $missingRate * 100,
+            'average_item_cost' => $avgItemCost,
+            'last_purchase_date' => $lastPurchaseDate,
             'total_purchases' => $totalPurchases,
-            'total_payments' => $totalPayments,
-            'abc_class' => $totalPurchases > 10000 ? 'A' : ($totalPurchases > 2000 ? 'B' : 'C')
+            'total_spent' => $totalSpent,
+            'total_order_count' => $totalOrderCount,
+            'abc_class' => $totalSpent > 10000 ? 'A' : ($totalSpent > 2000 ? 'B' : 'C')
         ];
     }
 
@@ -394,6 +466,8 @@ class ProcurementRepository {
 
         return [
             'stats' => $stats,
+            'total_spend' => (float)$stats['total_purchasing'],
+            'total_orders' => (int)($stats['pending_pos'] + $stats['pending_deliveries']),
             'category_distribution' => $categoryDistribution,
             'monthly_chart' => $monthlyChart
         ];

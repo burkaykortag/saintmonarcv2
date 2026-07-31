@@ -354,4 +354,81 @@ class ProcurementController extends Controller {
             $response->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
+
+    /**
+     * Tedarikçi Puanı Yeniden Hesapla
+     */
+    public function recalculateSupplierScore(Request $request, Response $response): void {
+        $id = (int)$request->post('id');
+        try {
+            $newScore = $this->service->recalculateSupplierScore($id);
+            $response->redirect(url('/admin/purchasing/suppliers/show?id=' . $id . '&success=' . urlencode('Skor yeniden hesaplandı: ' . number_format($newScore, 2) . ' / 5.00')));
+        } catch (Exception $e) {
+            $response->redirect(url('/admin/purchasing/suppliers/show?id=' . $id . '&error=' . urlencode($e->getMessage())));
+        }
+    }
+
+    /**
+     * Tedarikçi Notu Ekleme
+     */
+    public function createSupplierNote(Request $request, Response $response): void {
+        $supplierId = (int)$request->post('supplier_id');
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $adminId = $_SESSION['admin_id'] ?? 1;
+        try {
+            $note = $request->post('note') ?? '';
+            if (empty(trim($note))) {
+                throw new Exception('Not boş olamaz.');
+            }
+            $sql = "INSERT INTO supplier_notes (supplier_id, admin_id, note) VALUES (:sid, :aid, :note)";
+            $db = \Core\Application::getInstance()->getContainer()->get(\Core\Contracts\DatabaseInterface::class);
+            $db->execute($sql, [':sid' => $supplierId, ':aid' => $adminId, ':note' => $note]);
+            $response->redirect(url('/admin/purchasing/suppliers/show?id=' . $supplierId . '&success=' . urlencode('Not eklendi.')));
+        } catch (Exception $e) {
+            $response->redirect(url('/admin/purchasing/suppliers/show?id=' . $supplierId . '&error=' . urlencode($e->getMessage())));
+        }
+    }
+
+    /**
+     * Sözleşme Oluşturma
+     */
+    public function createContract(Request $request, Response $response): void {
+        try {
+            $data = $request->post();
+            $this->service->createContract($data);
+            $response->redirect(url('/admin/purchasing/contracts?success=' . urlencode('Sözleşme başarıyla oluşturuldu.')));
+        } catch (Exception $e) {
+            $response->redirect(url('/admin/purchasing/contracts?error=' . urlencode($e->getMessage())));
+        }
+    }
+
+    /**
+     * Ödeme Durumu Güncelleme
+     */
+    public function updatePaymentStatus(Request $request, Response $response): void {
+        $id = (int)$request->post('id');
+        $status = $request->post('status') ?? 'paid';
+        try {
+            $this->service->updatePaymentStatus($id, $status);
+            $response->redirect(url('/admin/purchasing/payments?success=' . urlencode('Ödeme durumu güncellendi.')));
+        } catch (Exception $e) {
+            $response->redirect(url('/admin/purchasing/payments?error=' . urlencode($e->getMessage())));
+        }
+    }
+
+    /**
+     * API: Tedarikçi Performansı
+     */
+    public function apiSupplierPerformance(Request $request, Response $response): void {
+        $id = (int)$request->get('id');
+        try {
+            $perf = $this->repository->getSupplierPerformance($id);
+            $response->json(['success' => true, 'data' => $perf]);
+        } catch (Exception $e) {
+            $response->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
 }
+

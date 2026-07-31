@@ -119,7 +119,15 @@ class Application {
         $this->container->singleton(\App\Repositories\WorkflowRepository::class, \App\Repositories\WorkflowRepository::class);
         $this->container->singleton(\App\Services\WorkflowService::class, \App\Services\WorkflowService::class);
         $this->container->singleton(\App\Repositories\ProcurementRepository::class, \App\Repositories\ProcurementRepository::class);
-        $this->container->singleton(\App\Services\ProcurementService::class, \App\Services\ProcurementService::class);
+        $this->container->singleton(\App\Services\ProcurementService::class, function() {
+            return new \App\Services\ProcurementService(
+                $this->container->get(\App\Repositories\ProcurementRepository::class),
+                $this->container->get(DatabaseInterface::class),
+                $this->container->get(\App\Services\WarehouseService::class),
+                $this->container->get(\App\Services\AuditLogger::class),
+                $this->container->get(\App\Services\RbacService::class)
+            );
+        });
         $this->container->singleton(\App\Controllers\StoreController::class, \App\Controllers\StoreController::class);
 
         

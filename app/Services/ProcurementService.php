@@ -8,6 +8,7 @@ use Core\Contracts\DatabaseInterface;
 use App\Repositories\ProcurementRepository;
 use App\Services\WarehouseService;
 use App\Services\AuditLogger;
+use App\Services\RbacService;
 use Exception;
 
 class ProcurementService {
@@ -15,17 +16,20 @@ class ProcurementService {
     private DatabaseInterface $db;
     private WarehouseService $warehouseService;
     private AuditLogger $auditLogger;
+    private ?RbacService $rbacService = null;
 
     public function __construct(
         ProcurementRepository $repository,
         DatabaseInterface $db,
         WarehouseService $warehouseService,
-        AuditLogger $auditLogger
+        AuditLogger $auditLogger,
+        ?RbacService $rbacService = null
     ) {
         $this->repository = $repository;
         $this->db = $db;
         $this->warehouseService = $warehouseService;
         $this->auditLogger = $auditLogger;
+        $this->rbacService = $rbacService;
     }
 
     /**
@@ -36,8 +40,11 @@ class ProcurementService {
             throw new Exception("Şirket adı zorunludur.");
         }
 
-        $sql = "INSERT INTO suppliers (company_name, tax_number, tax_office, contact_name, phone, email, country, city, currency, payment_terms, lead_time, is_active, score)
-                VALUES (:company_name, :tax_number, :tax_office, :contact_name, :phone, :email, :country, :city, :currency, :payment_terms, :lead_time, :is_active, :score)";
+        $status = $data['status'] ?? 'active';
+        $isActive = ($status === 'active') ? 1 : 0;
+
+        $sql = "INSERT INTO suppliers (company_name, tax_number, tax_office, contact_name, phone, email, country, city, district, address, zip_code, iban, notes, status, currency, payment_terms, lead_time, is_active, score)
+                VALUES (:company_name, :tax_number, :tax_office, :contact_name, :phone, :email, :country, :city, :district, :address, :zip_code, :iban, :notes, :status, :currency, :payment_terms, :lead_time, :is_active, :score)";
         
         $this->db->execute($sql, [
             ':company_name' => $data['company_name'],
@@ -48,10 +55,16 @@ class ProcurementService {
             ':email' => $data['email'] ?? null,
             ':country' => $data['country'] ?? null,
             ':city' => $data['city'] ?? null,
+            ':district' => $data['district'] ?? null,
+            ':address' => $data['address'] ?? null,
+            ':zip_code' => $data['zip_code'] ?? null,
+            ':iban' => $data['iban'] ?? null,
+            ':notes' => $data['notes'] ?? null,
+            ':status' => $status,
             ':currency' => $data['currency'] ?? 'TRY',
             ':payment_terms' => $data['payment_terms'] ?? null,
             ':lead_time' => (int)($data['lead_time'] ?? 0),
-            ':is_active' => isset($data['is_active']) ? (int)$data['is_active'] : 1,
+            ':is_active' => $isActive,
             ':score' => (float)($data['score'] ?? 5.00)
         ]);
 
@@ -70,10 +83,14 @@ class ProcurementService {
             throw new Exception("Şirket adı zorunludur.");
         }
 
+        $status = $data['status'] ?? 'active';
+        $isActive = ($status === 'active') ? 1 : 0;
+
         $sql = "UPDATE suppliers SET 
                     company_name = :company_name, tax_number = :tax_number, tax_office = :tax_office, contact_name = :contact_name, 
-                    phone = :phone, email = :email, country = :country, city = :city, currency = :currency, 
-                    payment_terms = :payment_terms, lead_time = :lead_time, is_active = :is_active, score = :score
+                    phone = :phone, email = :email, country = :country, city = :city, district = :district, 
+                    address = :address, zip_code = :zip_code, iban = :iban, notes = :notes, status = :status, 
+                    currency = :currency, payment_terms = :payment_terms, lead_time = :lead_time, is_active = :is_active, score = :score
                 WHERE id = :id";
         
         $res = $this->db->execute($sql, [
@@ -86,10 +103,16 @@ class ProcurementService {
             ':email' => $data['email'] ?? null,
             ':country' => $data['country'] ?? null,
             ':city' => $data['city'] ?? null,
+            ':district' => $data['district'] ?? null,
+            ':address' => $data['address'] ?? null,
+            ':zip_code' => $data['zip_code'] ?? null,
+            ':iban' => $data['iban'] ?? null,
+            ':notes' => $data['notes'] ?? null,
+            ':status' => $status,
             ':currency' => $data['currency'] ?? 'TRY',
             ':payment_terms' => $data['payment_terms'] ?? null,
             ':lead_time' => (int)($data['lead_time'] ?? 0),
-            ':is_active' => isset($data['is_active']) ? (int)$data['is_active'] : 1,
+            ':is_active' => $isActive,
             ':score' => (float)($data['score'] ?? 5.00)
         ]);
 
@@ -102,7 +125,7 @@ class ProcurementService {
      * Tedarikçi silme (Soft Delete).
      */
     public function deleteSupplier(int $id): bool {
-        $sql = "UPDATE suppliers SET deleted_at = NOW() WHERE id = :id";
+        $sql = "UPDATE suppliers SET deleted_at = NOW(), status = 'passive', is_active = 0 WHERE id = :id";
         $res = $this->db->execute($sql, [':id' => $id]);
         $this->auditLogger->logActivity('supplier_delete', "Tedarikçi hesabı silindi (ID: {$id})");
         return $res;
@@ -118,7 +141,18 @@ class ProcurementService {
 
         $this->db->beginTransaction();
         try {
-            $poNumber = 'PO-' . time() . '-' . rand(100, 999);
+            // Sequential PO numbering: PO-YYYY-XXXXXX
+            $year = date('Y');
+            $lastPoRow = $this->db->query(
+                "SELECT po_number FROM purchase_orders WHERE po_number LIKE :prefix ORDER BY id DESC LIMIT 1 FOR UPDATE",
+                [':prefix' => "PO-{$year}-%"]
+            );
+            if (!empty($lastPoRow) && preg_match('/PO-\d{4}-(\d+)/', $lastPoRow[0]['po_number'], $m)) {
+                $nextSeq = (int)$m[1] + 1;
+            } else {
+                $nextSeq = 1;
+            }
+            $poNumber = sprintf('PO-%s-%06d', $year, $nextSeq);
             
             // Calculate totals
             $taxTotal = 0;
@@ -201,29 +235,44 @@ class ProcurementService {
     }
 
     /**
-     * Sipariş Durum Güncelleme ve Onay Akışı.
+     * Sipariş Durum Güncelleme ve Onay Akışı (RBAC Destekli).
      */
     public function updatePurchaseOrderStatus(int $id, string $status, ?int $adminId = null): bool {
-        $allowed = ['draft', 'pending_approval', 'approved', 'sent', 'partially_received', 'completed', 'cancelled'];
+        $allowed = ['draft', 'pending_approval', 'approved', 'sent', 'partially_received', 'completed', 'cancelled', 'closed'];
         if (!in_array($status, $allowed)) {
             throw new Exception("Geçersiz satın alma durumu: {$status}");
         }
+
+        // RBAC: Approval requires approve_purchase_order or approve_purchase_orders permission
+        if ($status === 'approved' && $adminId && $this->rbacService !== null) {
+            $hasApprove = $this->rbacService->adminHasPermission($adminId, 'approve_purchase_order')
+                       || $this->rbacService->adminHasPermission($adminId, 'approve_purchase_orders');
+            if (!$hasApprove) {
+                throw new Exception('Satın alma siparişini onaylama yetkiniz bulunmamaktadır.');
+            }
+        }
+
+        // Fetch old status for audit log
+        $currentPoRow = $this->db->query("SELECT status, po_number FROM purchase_orders WHERE id = :id LIMIT 1", [':id' => $id]);
+        $oldStatus = $currentPoRow[0]['status'] ?? 'unknown';
+        $poNumber = $currentPoRow[0]['po_number'] ?? 'N/A';
 
         $params = [
             ':id' => $id,
             ':status' => $status
         ];
 
-        $approvedSql = "";
+        $approvedSql = '';
         if ($status === 'approved' && $adminId) {
-            $approvedSql = ", approved_by = :approved_by";
+            $approvedSql = ', approved_by = :approved_by';
             $params[':approved_by'] = $adminId;
         }
 
         $sql = "UPDATE purchase_orders SET status = :status {$approvedSql} WHERE id = :id";
         $res = $this->db->execute($sql, $params);
         
-        $this->auditLogger->logActivity('purchase_order_status_update', "Sipariş durumu güncellendi: {$status} (ID: {$id})");
+        $this->auditLogger->logActivity('purchase_order_status_update', "Sipariş durumu güncellendi: {$oldStatus} → {$status} ({$poNumber} ID: {$id})");
+        $this->auditLogger->logAudit('status_change', 'PurchaseOrder', $id, ['status' => $oldStatus], ['status' => $status]);
         return $res;
     }
 
@@ -531,5 +580,31 @@ class ProcurementService {
         }
 
         return $suggestions;
+    }
+
+    /**
+     * Recalculates and saves the overall performance score for a supplier.
+     */
+    public function recalculateSupplierScore(int $supplierId): float {
+        $perf = $this->repository->getSupplierPerformance($supplierId);
+        if (empty($perf)) {
+            return 5.00;
+        }
+
+        // On-time factor: max 5 points, minus penalty for late delivery
+        $onTimeFactor = ($perf['on_time_rate'] / 100.0) * 5.0;
+        // Damaged/refund rate penalty
+        $damagePenalty = ($perf['refund_rate'] / 100.0) * 5.0;
+        // Missing rate penalty
+        $missingPenalty = ($perf['missing_rate'] / 100.0) * 5.0;
+
+        $score = $onTimeFactor - $damagePenalty - $missingPenalty;
+        $score = max(1.00, min(5.00, $score));
+        $score = round($score, 2);
+
+        $sql = "UPDATE suppliers SET score = :score WHERE id = :id";
+        $this->db->execute($sql, [':score' => $score, ':id' => $supplierId]);
+
+        return $score;
     }
 }
