@@ -1,0 +1,43 @@
+/* Responsive Breakpoints & Global Layout Utility Override Rules */
+
+/* Container Layout */
+.container-premium {
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+    padding-right: var(--spacing-md);
+    padding-left: var(--spacing-md);
+}
+
+/* Responsive Grid Systems for UltraWide & Laptop */
+@media (min-width: 576px) {
+    .container-premium { max-width: 540px; }
+}
+@media (min-width: 768px) {
+    .container-premium { max-width: 720px; }
+}
+@media (min-width: 992px) {
+    .container-premium { max-width: 960px; }
+}
+@media (min-width: 1200px) {
+    .container-premium { max-width: 1140px; }
+}
+@media (min-width: 1400px) {
+    .container-premium { max-width: 1320px; }
+}
+@media (min-width: 1920px) {
+    .container-premium { max-width: 1800px; } /* UltraWide Support */
+}
+
+/* Margin and Padding Utility Helpers using Design Tokens */
+.p-token-xs { padding: var(--spacing-xs) !important; }
+.p-token-sm { padding: var(--spacing-sm) !important; }
+.p-token-md { padding: var(--spacing-md) !important; }
+.p-token-lg { padding: var(--spacing-lg) !important; }
+.p-token-xl { padding: var(--spacing-xl) !important; }
+
+.m-token-xs { margin: var(--spacing-xs) !important; }
+.m-token-sm { margin: var(--spacing-sm) !important; }
+.m-token-md { margin: var(--spacing-md) !important; }
+.m-token-lg { margin: var(--spacing-lg) !important; }
+.m-token-xl { margin: var(--spacing-xl) !important; }

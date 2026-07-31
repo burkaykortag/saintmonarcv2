@@ -1,777 +1,657 @@
 <?php
 use App\Helpers\ComponentHelper;
-
-$title = "Ürün Ekle - SaintMonarc";
+$title = 'PIM – Yeni Ürün Ekle | SaintMonarc';
 include dirname(__DIR__) . '/layouts/header.php';
-
 $security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
 $csrfToken = $security->generateCsrfToken();
 ?>
-
 <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js" referrerpolicy="origin"></script>
 
-<div class="mb-4">
-    <?= ComponentHelper::breadcrumb(['Yönetim Paneli' => url('/admin'), 'Katalog' => '#', 'Ürünler' => url('/admin/products'), 'Yeni Ürün' => '#']) ?>
-    <h2 class="mt-2 text-white font-weight-700 m-0" style="font-size: 26px;">Yeni Ürün Ekle</h2>
+<style>
+/* ── Wizard specifics ───────────────────────── */
+.pim-wizard-wrap{background:var(--pim-card);border:1px solid var(--pim-border);border-radius:var(--pim-radius-lg);overflow:hidden}
+.pim-wizard-body{padding:36px 40px;min-height:460px}
+.wiz-tip{background:linear-gradient(135deg,var(--pim-gold-glow),transparent);border:1px solid var(--pim-gold-solid);border-radius:var(--pim-radius);padding:16px 20px;display:flex;gap:12px;align-items:flex-start;margin-top:20px}
+.wiz-tip i{font-size:22px;color:var(--pim-gold);flex-shrink:0;margin-top:2px}
+.brand-card-opt{border:1.5px solid var(--pim-border);border-radius:var(--pim-radius-sm);padding:14px 18px;cursor:pointer;transition:var(--pim-transition);display:flex;align-items:center;gap:12px}
+.brand-card-opt:hover,.brand-card-opt.selected{border-color:var(--pim-gold);background:var(--pim-gold-glow);color:var(--pim-gold)}
+.brand-card-opt input{display:none}
+.pub-opt{border:1.5px solid var(--pim-border);border-radius:var(--pim-radius-sm);padding:16px 20px;cursor:pointer;transition:var(--pim-transition)}
+.pub-opt:hover,.pub-opt.selected{border-color:var(--pim-gold);background:var(--pim-gold-glow)}
+.pub-opt input{display:none}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--pim-border);font-size:13px}
+.checklist-item:last-child{border:none}
+.step-complete-badge{width:22px;height:22px;border-radius:50%;background:var(--pim-success-bg);border:1.5px solid var(--pim-success);color:var(--pim-success);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.step-pending-badge{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.05);border:1.5px solid var(--pim-border);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;color:var(--pim-text-xs)}
+.preview-card{background:var(--pim-surface);border:1px solid var(--pim-border);border-radius:var(--pim-radius);overflow:hidden}
+.preview-img{width:100%;aspect-ratio:1;object-fit:cover;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center}
+@media(max-width:768px){.pim-wizard-body{padding:20px 16px}.pim-stepper{padding:12px 10px}}
+</style>
+
+<div class="pim-module">
+
+<!-- ─── Header ───────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+  <div>
+    <?= ComponentHelper::breadcrumb(['Yönetim Paneli' => url('/admin'), 'Ürünler' => url('/admin/products'), 'Yeni Ürün' => '#']) ?>
+    <h2 class="text-white fw-bold m-0 mt-1" style="font-size:22px"><i class="bi bi-plus-circle me-2 text-pim-gold"></i>Yeni Ürün Ekle</h2>
+  </div>
+  <a href="<?= url('/admin/products') ?>" class="pim-btn pim-btn-secondary"><i class="bi bi-arrow-left"></i> Ürün Listesine Dön</a>
 </div>
 
-<?php if (!empty($_GET['error'])): ?>
-    <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger p-3 rounded-3 mb-4">
-        <?= htmlspecialchars($_GET['error']) ?>
+<form id="pimCreateForm" action="<?= url('/admin/products/store') ?>" method="POST" enctype="multipart/form-data">
+<input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+
+<div class="pim-wizard-wrap" id="pimCreateWizard">
+  <!-- ── Stepper ────────────────────────────────────── -->
+  <div class="pim-stepper" role="tablist">
+    <?php
+    $steps = [
+        'Genel Bilgiler','Kategori','Marka','Varyantlar',
+        'Fiyat','Stok','Medya','SEO','Önizleme','Yayınla'
+    ];
+    foreach ($steps as $i => $s):
+        $n = $i + 1;
+    ?>
+    <div class="pim-step <?= $n===1?'active':'' ?>" id="dot<?= $n ?>">
+      <div class="pim-step-num"><?= $n ?></div>
+      <span class="d-none d-md-inline"><?= $s ?></span>
     </div>
-<?php endif; ?>
+    <?php if ($n < count($steps)): ?><div class="pim-step-connector" id="conn<?= $n ?>"></div><?php endif; endforeach; ?>
+  </div>
 
-<form action="<?= url('/admin/products/create') ?>" method="POST" class="row g-4" id="productForm">
-    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+  <!-- ── Wizard Body ───────────────────────────────── -->
+  <div class="pim-wizard-body">
 
-    <!-- Left Column: Fields -->
-    <div class="col-12 col-xl-8">
-        
-        <!-- General Info Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Genel Bilgiler</h4>
-            
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Ürün Adı</label>
-                    <input type="text" name="name" required class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 12px;">
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Ürün Alt Başlığı</label>
-                    <input type="text" name="subtitle" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 12px;">
-                </div>
+    <!-- STEP 1: GENEL BİLGİLER -->
+    <div class="pim-wizard-step active" id="wstep1">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-info-circle text-pim-gold me-2"></i>Genel Bilgiler</h4>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="pim-form-group">
+            <label class="pim-form-label">Ürün Adı <span class="required">*</span></label>
+            <input class="pim-input" style="font-size:16px;padding:14px" type="text" name="name" id="wizProductName" required placeholder="Örn: Premium Deri Cüzdan – Kahverengi">
+          </div>
+          <div class="pim-form-group">
+            <label class="pim-form-label">Alt Başlık</label>
+            <input class="pim-input" type="text" name="subtitle" placeholder="Ürünü özetleyen kısa başlık">
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="pim-form-label">Ürün Tipi</label>
+              <select class="pim-select" name="product_type">
+                <option value="physical">Fiziksel</option><option value="digital">Dijital</option>
+                <option value="service">Hizmet</option><option value="subscription">Abonelik</option>
+              </select>
             </div>
-
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Kategori</label>
-                    <select name="category_id" required class="form-select border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 12px;">
-                        <option value="">Kategori Seçin</option>
-                        <?php foreach ($categories as $cat): ?>
-                            <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Marka</label>
-                    <select name="brand_id" class="form-select border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 12px;">
-                        <option value="">Marka Seçin</option>
-                        <?php foreach ($brands as $br): ?>
-                            <option value="<?= $br['id'] ?>"><?= htmlspecialchars($br['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+            <div class="col-md-6">
+              <label class="pim-form-label">Durum</label>
+              <select class="pim-select" name="condition">
+                <option value="new">Yeni</option><option value="renewed">Yenilenmiş</option><option value="used">İkinci El</option>
+              </select>
             </div>
-
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Ürün Tipi</label>
-                    <select name="product_type" class="form-select border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 12px;">
-                        <option value="physical">Fiziksel Ürün</option>
-                        <option value="digital">Dijital Varlık</option>
-                        <option value="service">Hizmet</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Durum</label>
-                    <select name="status" class="form-select border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 12px;">
-                        <option value="draft">Taslak</option>
-                        <option value="published">Yayında</option>
-                        <option value="passive">Pasif</option>
-                        <option value="archived">Arşiv</option>
-                        <option value="coming_soon">Yakında</option>
-                        <option value="out_of_stock">Stokta Yok</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-muted fs-7 mb-1">Kısa Açıklama</label>
-                <input type="text" name="short_description" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 12px;">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-muted fs-7 mb-1">Özet Bilgi</label>
-                <textarea name="summary" class="form-control border-0 text-white" rows="2" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; resize:none;"></textarea>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-muted fs-7 mb-1">Detaylı Açıklama (Long Description)</label>
-                <textarea id="descriptionEditor" name="description" class="form-control border-0 text-white" rows="8" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important;"></textarea>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label text-muted fs-7 mb-1">Teknik Özellikler</label>
-                <textarea name="technical_specs" class="form-control border-0 text-white" rows="4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; resize:none;"></textarea>
-            </div>
-            
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Kullanım Talimatı</label>
-                    <textarea name="instructions" class="form-control border-0 text-white" rows="3" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; resize:none;"></textarea>
-                </div>
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Garanti Bilgisi</label>
-                    <textarea name="warranty" class="form-control border-0 text-white" rows="3" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; resize:none;"></textarea>
-                </div>
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Teslimat Bilgisi</label>
-                    <textarea name="delivery_info" class="form-control border-0 text-white" rows="3" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; resize:none;"></textarea>
-                </div>
-            </div>
+          </div>
+          <div class="pim-form-group">
+            <label class="pim-form-label">Kısa Açıklama</label>
+            <textarea class="pim-textarea" name="short_description" rows="4" placeholder="Ürün liste kartında görünecek kısa açıklama..."></textarea>
+          </div>
+          <div class="pim-form-group">
+            <label class="pim-form-label">Ana Açıklama</label>
+            <textarea id="wizDesc" name="description"></textarea>
+          </div>
         </div>
-
-        <!-- Identifiers Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Kodlama & Barkod Bilgileri</h4>
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Stok Kodu (SKU)</label>
-                    <input type="text" name="sku" required class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Barkod (EAN/UPC)</label>
-                    <input type="text" name="barcode" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Model No</label>
-                    <input type="text" name="model_no" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
+        <div class="col-lg-5">
+          <div class="wiz-tip">
+            <i class="bi bi-lightbulb-fill"></i>
+            <div><strong class="text-white">Pro İpucu!</strong><p class="text-muted fs-7 mb-0 mt-1">İyi bir ürün adı ve açıklama satışları <strong class="text-success">%40'a kadar artırır</strong>. Anahtar kelimeleri doğal kullanın.</p></div>
+          </div>
+          <div class="pim-section mt-3">
+            <div class="pim-section-title mb-3"><i class="bi bi-eye"></i>Canlı Önizleme</div>
+            <div style="background:rgba(255,255,255,.02);border-radius:10px;padding:14px">
+              <div class="fw-700 text-white" id="wizNamePreview" style="font-size:15px">Ürün adı buraya gelecek...</div>
+              <div class="text-muted fs-7 mt-1" id="wizDescPreview">Açıklama buraya gelecek...</div>
             </div>
-            <div class="row g-3">
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">GTIN</label>
-                    <input type="text" name="gtin" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">EAN</label>
-                    <input type="text" name="ean" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">UPC</label>
-                    <input type="text" name="upc" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">MPN</label>
-                    <input type="text" name="mpn" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-            </div>
+          </div>
         </div>
-
-        <!-- Pricing Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Fiyatlandırma & Çoklu Para Birimi</h4>
-            <div class="row g-3 mb-3 align-items-end">
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Para Birimi</label>
-                    <select name="currency_code" id="currencySelect" class="form-select border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                        <option value="TRY">TRY (₺)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                    </select>
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Maliyet Fiyatı</label>
-                    <input type="number" step="0.0001" name="cost_price" id="costPriceInput" value="0.00" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Satış Fiyatı (Vergi Hariç)</label>
-                    <input type="number" step="0.0001" name="price" id="priceInput" value="0.00" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Karşılaştırma Fiyatı</label>
-                    <input type="number" step="0.0001" name="compare_at_price" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-            </div>
-
-            <div class="row g-3 mb-3 align-items-center">
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">KDV Oranı (%)</label>
-                    <input type="number" step="0.01" name="tax_rate" id="taxRateInput" value="18.00" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Vergi Dahil Fiyat</label>
-                    <input type="text" readonly id="taxIncludedPriceInput" class="form-control border-0 text-white-50 bg-transparent" style="border: 1px dashed var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-12 col-md-6">
-                    <div class="p-3 rounded-3" style="background: rgba(197, 168, 128, 0.05); border: 1px solid rgba(197, 168, 128, 0.15);">
-                        <div class="d-flex justify-content-between mb-1 fs-7">
-                            <span class="text-muted">Brüt Kar:</span>
-                            <span class="font-weight-600 text-white" id="profitSpan">0.00 ₺</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-1 fs-7">
-                            <span class="text-muted">Kar Marjı:</span>
-                            <span class="font-weight-600 text-success" id="marginSpan">0.00%</span>
-                        </div>
-                        <div class="d-flex justify-content-between fs-7">
-                            <span class="text-muted">Kar Oranı (Markup):</span>
-                            <span class="font-weight-600 text-info" id="rateSpan">0.00%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">İndirimli Özel Fiyat</label>
-                    <input type="number" step="0.0001" name="special_price" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Başlangıç Tarihi</label>
-                    <input type="datetime-local" name="special_price_start" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-4">
-                    <label class="form-label text-muted fs-7 mb-1">Bitiş Tarihi</label>
-                    <input type="datetime-local" name="special_price_end" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-            </div>
-        </div>
-
-        <!-- Stock and Shipping Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Stok Parametreleri & Kargo Desi</h4>
-            <div class="row g-3 mb-3">
-                <div class="col-6 col-md-3">
-                    <div class="form-check form-switch mt-4">
-                        <input class="form-check-input" type="checkbox" name="unlimited_stock" value="1" id="unlimitedStockSwitch">
-                        <label class="form-check-label text-white fs-7" for="unlimitedStockSwitch">Sınırsız Stok</label>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Toplam Stok</label>
-                    <input type="number" name="total_stock" id="totalStockInput" value="0" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Kritik Stok Sınırı</label>
-                    <input type="number" name="critical_stock" value="5" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Minimum Stok</label>
-                    <input type="number" name="min_stock" value="0" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-            </div>
-            
-            <div class="row g-3 mb-3 align-items-center">
-                <div class="col-6 col-md-3">
-                    <label class="form-label text-muted fs-7 mb-1">Maksimum Sipariş</label>
-                    <input type="number" name="max_order" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="form-check form-switch mt-3">
-                        <input class="form-check-input" type="checkbox" name="allow_backorder" value="1" id="allowBackorderSwitch">
-                        <label class="form-check-label text-white fs-7" for="allowBackorderSwitch">Backorder (Aşıma İzin Ver)</label>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="form-check form-switch mt-3">
-                        <input class="form-check-input" type="checkbox" name="is_preorder" value="1" id="isPreorderSwitch">
-                        <label class="form-check-label text-white fs-7" for="isPreorderSwitch">Ön Siparişli Ürün</label>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="form-check form-switch mt-3">
-                        <input class="form-check-input" type="checkbox" checked name="track_stock" value="1" id="trackStockSwitch">
-                        <label class="form-check-label text-white fs-7" for="trackStockSwitch">Stok Takibi Yap</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-6 col-md-2">
-                    <label class="form-label text-muted fs-7 mb-1">Ağırlık (Kg)</label>
-                    <input type="number" step="0.01" name="weight" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label text-muted fs-7 mb-1">Desi Hacmi</label>
-                    <input type="number" step="0.01" name="desi" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-4 col-md-2">
-                    <label class="form-label text-muted fs-7 mb-1">Genişlik (cm)</label>
-                    <input type="number" step="0.1" name="width" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-4 col-md-2">
-                    <label class="form-label text-muted fs-7 mb-1">Yükseklik (cm)</label>
-                    <input type="number" step="0.1" name="height" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-4 col-md-2">
-                    <label class="form-label text-muted fs-7 mb-1">Uzunluk (cm)</label>
-                    <input type="number" step="0.1" name="length" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-            </div>
-        </div>
-
-        <!-- Variants Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-2" style="font-size: 16px;">Ürün Varyant Seçenekleri</h4>
-            <p class="text-muted fs-8 mb-4">Renk, beden, materyal vb. parametreleri işaretleyip "Varyantları Oluştur" tuşuyla stok ve fiyat tablolarını dinamik üretin.</p>
-            
-            <div class="row g-3 mb-4">
-                <?php foreach ($attributes as $attr): ?>
-                    <div class="col-12 col-md-6 mb-3">
-                        <label class="form-label text-white-50 font-weight-600 fs-7 mb-2"><?= htmlspecialchars($attr['name']) ?></label>
-                        <div class="d-flex flex-wrap gap-2">
-                            <?php foreach ($attr['values'] as $val): ?>
-                                <div class="form-check form-check-inline p-0 m-0">
-                                    <input type="checkbox" class="btn-check attr-checkbox" id="val-<?= $val['id'] ?>" data-attr-id="<?= $attr['id'] ?>" data-attr-name="<?= htmlspecialchars($attr['name']) ?>" data-val-id="<?= $val['id'] ?>" data-val-name="<?= htmlspecialchars($val['value']) ?>" autocomplete="off">
-                                    <label class="btn btn-outline-secondary fs-8 py-1 px-2 border-secondary-subtle" for="val-<?= $val['id'] ?>"><?= htmlspecialchars($val['value']) ?></label>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            
-            <button type="button" class="btn btn-secondary border-0 mb-4 fs-7 py-2" onclick="generateVariantsTable()"><i class="bi bi-gear-wide-connected me-2"></i>Varyant Kombinasyonlarını Üret</button>
-            
-            <div class="table-responsive">
-                <table class="table table-dark border-0 m-0 d-none" id="variantsTable" style="background:transparent;">
-                    <thead>
-                        <tr class="fs-8 text-muted border-bottom border-secondary">
-                            <th>Varyant Tipi</th>
-                            <th>SKU</th>
-                            <th>Barkod</th>
-                            <th>Fiyat (₺)</th>
-                            <th>Maliyet</th>
-                            <th>Stok</th>
-                            <th>Görsel</th>
-                        </tr>
-                    </thead>
-                    <tbody id="variantsTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Related Products Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">İlişkili Ürünler & Kampanyalar</h4>
-            <div class="row g-3">
-                <div class="col-12 col-md-6 mb-3">
-                    <label class="form-label text-muted fs-7 mb-1">Benzer Ürünler (Similar)</label>
-                    <select name="relations[similar][]" multiple class="form-select border-0 text-white bg-dark fs-7" style="height: 120px;">
-                        <?php foreach ($allProducts as $ap): ?>
-                            <option value="<?= $ap['id'] ?>"><?= htmlspecialchars($ap['name']) ?> (SKU: <?= $ap['sku'] ?>)</option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6 mb-3">
-                    <label class="form-label text-muted fs-7 mb-1">Tamamlayıcı Ürünler (Complementary)</label>
-                    <select name="relations[complementary][]" multiple class="form-select border-0 text-white bg-dark fs-7" style="height: 120px;">
-                        <?php foreach ($allProducts as $ap): ?>
-                            <option value="<?= $ap['id'] ?>"><?= htmlspecialchars($ap['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Çapraz Satış Ürünleri (Cross-Sell)</label>
-                    <select name="relations[cross_sell][]" multiple class="form-select border-0 text-white bg-dark fs-7" style="height: 120px;">
-                        <?php foreach ($allProducts as $ap): ?>
-                            <option value="<?= $ap['id'] ?>"><?= htmlspecialchars($ap['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Dikey Satış Ürünleri (Upsell)</label>
-                    <select name="relations[upsell][]" multiple class="form-select border-0 text-white bg-dark fs-7" style="height: 120px;">
-                        <?php foreach ($allProducts as $ap): ?>
-                            <option value="<?= $ap['id'] ?>"><?= htmlspecialchars($ap['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Additional Files Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-2" style="font-size: 16px;">Ek Dosyalar & PDF Dokümanları</h4>
-            <p class="text-muted fs-8 mb-4">Kullanım kılavuzları, garanti belgeleri gibi ek PDF dosyalarını listeye ekleyin.</p>
-            <div id="additionalFilesList" class="mb-3"></div>
-            <button type="button" class="btn btn-secondary border-0 fs-8 py-2" onclick="addFileRow()"><i class="bi bi-file-earmark-plus me-2"></i>Yeni Dosya Ekle</button>
-        </div>
-
-        <!-- SEO Card -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Arama Motoru Optimizasyonu (SEO)</h4>
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Meta Title</label>
-                    <input type="text" name="seo[title]" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Canonical URL</label>
-                    <input type="text" name="seo[canonical_url]" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-muted fs-7 mb-1">Meta Açıklaması (Meta Description)</label>
-                <textarea name="seo[description]" class="form-control border-0 text-white" rows="3" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; resize:none;"></textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-muted fs-7 mb-1">Anahtar Kelimeler (Meta Keywords)</label>
-                <input type="text" name="seo[keywords]" class="form-control border-0 text-white" placeholder="virgülle ayırarak giriniz..." style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-            </div>
-            
-            <h5 class="text-white-50 font-weight-600 fs-7 mb-3 mt-4">Sosyal Medya Kartları (Open Graph & Twitter Card)</h5>
-            <div class="row g-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Sosyal Medya Başlığı (OG Title)</label>
-                    <input type="text" name="seo[og_title]" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label text-muted fs-7 mb-1">Sosyal Medya Görseli URL (OG Image)</label>
-                    <input type="text" name="seo[og_image]" class="form-control border-0 text-white" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-                </div>
-                <div class="col-12">
-                    <label class="form-label text-muted fs-7 mb-1">Sosyal Medya Açıklaması (OG Description)</label>
-                    <textarea name="seo[og_description]" class="form-control border-0 text-white" rows="2" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; resize:none;"></textarea>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <!-- Right Column: Meta Info / Sidebars -->
-    <div class="col-12 col-xl-4">
-        
-        <!-- Media Settings -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Medya Dosyaları & Görseller</h4>
-            
-            <div class="mb-4">
-                <label class="form-label text-muted fs-7 mb-2">Kapak Fotoğrafı</label>
-                <input type="hidden" name="cover_image_id" id="cover_image_id" value="">
-                <div id="cover_preview" class="border border-secondary rounded-4 p-3 d-flex align-items-center justify-content-center cursor-pointer" style="min-height: 120px; background: rgba(0,0,0,0.15);" onclick="openMediaPicker('cover')">
-                    <span class="text-muted"><i class="bi bi-image me-2"></i>Resim Seç</span>
-                </div>
+    <!-- STEP 2: KATEGORİ -->
+    <div class="pim-wizard-step" id="wstep2">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-diagram-2 text-pim-gold me-2"></i>Kategori Seçimi</h4>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="pim-form-group">
+            <label class="pim-form-label">Ana Kategori <span class="required">*</span></label>
+            <select class="pim-select" name="category_id" id="wizCategory" style="font-size:15px;padding:12px">
+              <option value="">– Kategori Seçin –</option>
+              <?php foreach ($categories ?? [] as $cat): ?>
+              <option value="<?= $cat['id'] ?>"><?= htmlspecialchars(str_repeat('└ ', $cat['depth'] ?? 0) . $cat['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="pim-form-group">
+            <label class="pim-form-label">Etiketler</label>
+            <div class="d-flex flex-wrap align-items-center gap-1 pim-input" id="wizTagWrap" style="min-height:44px;cursor:text" onclick="document.getElementById('wizTagInput').focus()">
+              <input type="text" id="wizTagInput" placeholder="Etiket ekle, Enter'a bas" style="background:none;border:none;outline:none;color:var(--pim-text);font-size:13px;flex:1;min-width:120px">
             </div>
-
-            <div class="mb-4">
-                <label class="form-label text-muted fs-7 mb-2">Ürün Galeri Resimleri</label>
-                <div id="gallery_previews" class="row g-2 mb-2"></div>
-                <button type="button" class="btn btn-secondary w-100 py-2 border-0 fs-8" onclick="openMediaPicker('gallery')">
-                    <i class="bi bi-images me-2"></i>Galeriye Görsel Ekle
-                </button>
-                <div id="gallery_inputs_container"></div>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label text-muted fs-7 mb-2">Tanıtım Videosu (Kütüphane)</label>
-                <input type="hidden" name="promo_video_id" id="promo_video_id" value="">
-                <div id="video_preview" class="border border-secondary rounded-4 p-3 d-flex align-items-center justify-content-center cursor-pointer" style="min-height: 80px; background: rgba(0,0,0,0.15);" onclick="openMediaPicker('video')">
-                    <span class="text-muted"><i class="bi bi-play-circle me-2"></i>Kütüphaneden Video Seç</span>
-                </div>
-            </div>
-            
-            <div class="mb-4">
-                <label class="form-label text-muted fs-7 mb-1">Youtube Video Linki</label>
-                <input type="text" name="youtube_url" class="form-control border-0 text-white" placeholder="https://youtube.com/watch?v=..." style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-            </div>
-            <div class="mb-4">
-                <label class="form-label text-muted fs-7 mb-1">Vimeo Video Linki</label>
-                <input type="text" name="vimeo_url" class="form-control border-0 text-white" placeholder="https://vimeo.com/..." style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-            </div>
-            <div class="mb-4">
-                <label class="form-label text-muted fs-7 mb-1">Mp4 Video Linki (Alternatif)</label>
-                <input type="text" name="mp4_url" class="form-control border-0 text-white" placeholder="https://site.com/video.mp4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-            </div>
-            <div class="mb-2">
-                <label class="form-label text-muted fs-7 mb-1">360 Derece Görsel (ID'ler)</label>
-                <input type="text" name="images_360" class="form-control border-0 text-white" placeholder="virgülle ayrılmış medya ID'leri..." style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-            </div>
+            <input type="hidden" name="tags" id="wizTagsHidden">
+          </div>
         </div>
-
-        <!-- Badges & Flags -->
-        <div class="card p-4 border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Ürün Rozetleri & Etiketler</h4>
-            
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_new" value="1" id="isNewSwitch">
-                <label class="form-check-label text-white fs-7" for="isNewSwitch">Yeni Ürün</label>
-            </div>
-            
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_discount" value="1" id="isDiscountSwitch">
-                <label class="form-check-label text-white fs-7" for="isDiscountSwitch">İndirim Rozeti</label>
-            </div>
-            
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_bestseller" value="1" id="isBestSellerSwitch">
-                <label class="form-check-label text-white fs-7" for="isBestSellerSwitch">Çok Satan (Bestseller)</label>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="isFeaturedSwitch">
-                <label class="form-check-label text-white fs-7" for="isFeaturedSwitch">Öne Çıkan Ürün</label>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_editors_choice" value="1" id="isEditorsSwitch">
-                <label class="form-check-label text-white fs-7" for="isEditorsSwitch">Editörün Seçimi</label>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_campaign" value="1" id="isCampaignSwitch">
-                <label class="form-check-label text-white fs-7" for="isCampaignSwitch">Kampanya Ürünü</label>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_new_arrival" value="1" id="isArrivalSwitch">
-                <label class="form-check-label text-white fs-7" for="isArrivalSwitch">Yeni Gelen</label>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="is_premium" value="1" id="isPremiumSwitch">
-                <label class="form-check-label text-white fs-7" for="isPremiumSwitch">Premium Sürüm</label>
-            </div>
-
-            <div class="form-check form-switch mb-4">
-                <input class="form-check-input" type="checkbox" name="free_shipping" value="1" id="freeShippingSwitch">
-                <label class="form-check-label text-white fs-7" for="freeShippingSwitch">Ücretsiz Kargo</label>
-            </div>
-
-            <div class="mb-2">
-                <label class="form-label text-muted fs-7 mb-1">Ürün Etiketleri</label>
-                <input type="text" name="tags" class="form-control border-0 text-white" placeholder="Örn: ayakkabı, spor, deri..." style="background: rgba(255,255,255,0.03); border: 1px solid var(--sm-border) !important; padding: 10px;">
-            </div>
+        <div class="col-lg-5">
+          <div class="pim-section">
+            <div class="pim-section-title mb-3"><i class="bi bi-tree"></i>Kategori Yolu</div>
+            <div id="catPathPreview" class="text-muted fs-7">Kategori seçilmedi.</div>
+          </div>
+          <div class="wiz-tip mt-3">
+            <i class="bi bi-tags-fill"></i>
+            <div><strong class="text-white">Kategori Önemi</strong><p class="text-muted fs-7 mb-0 mt-1">Doğru kategori ürününüzün arama sonuçlarında üst sıralarda yer almasını sağlar.</p></div>
+          </div>
         </div>
-
-        <!-- Publishing Actions -->
-        <div class="card p-4 border-0" style="background: rgba(255,255,255,0.02); border: 1px solid var(--sm-border) !important; border-radius: 20px;">
-            <h4 class="text-white font-weight-600 mb-4" style="font-size: 16px;">Yayınlama Ayarları</h4>
-            
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" checked name="is_active" value="1" id="isActiveSwitch">
-                <label class="form-check-label text-white fs-7" for="isActiveSwitch">Ürün Aktif</label>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="show_in_home" value="1" id="showHomeSwitch">
-                <label class="form-check-label text-white fs-7" for="showHomeSwitch">Ana Sayfada Göster</label>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="show_in_slider" value="1" id="showSliderSwitch">
-                <label class="form-check-label text-white fs-7" for="showSliderSwitch">Slider Üzerinde Göster</label>
-            </div>
-
-            <div class="form-check form-switch mb-4">
-                <input class="form-check-input" type="checkbox" name="show_in_banner" value="1" id="showBannerSwitch">
-                <label class="form-check-label text-white fs-7" for="showBannerSwitch">Banner Üzerinde Göster</label>
-            </div>
-
-            <div class="d-flex flex-column gap-2">
-                <button type="submit" class="btn w-100 py-3">Ürünü Kaydet ve Yayınla</button>
-                <a href="<?= url('/admin/products') ?>" class="btn btn-secondary w-100 py-3 border-0 text-center">İptal Et</a>
-            </div>
-        </div>
-
+      </div>
     </div>
+
+    <!-- STEP 3: MARKA -->
+    <div class="pim-wizard-step" id="wstep3">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-award text-pim-gold me-2"></i>Marka Seçimi</h4>
+      <div class="row g-3" id="brandCards">
+        <div class="col-12">
+          <label class="brand-card-opt selected" id="noBrandCard">
+            <input type="radio" name="brand_id" value="" checked>
+            <i class="bi bi-slash-circle fs-4 text-muted"></i>
+            <div><div class="fw-600">Markasız</div><div class="text-muted fs-7">Belirli bir marka yok</div></div>
+          </label>
+        </div>
+        <?php foreach ($brands ?? [] as $b): ?>
+        <div class="col-md-6 col-lg-4">
+          <label class="brand-card-opt" onclick="selectBrand(this)">
+            <input type="radio" name="brand_id" value="<?= $b['id'] ?>">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,.05);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <?php if (!empty($b['logo'])): ?><img src="<?= url($b['logo']) ?>" style="width:28px;height:28px;object-fit:contain"><?php else: ?><i class="bi bi-building text-muted"></i><?php endif; ?>
+            </div>
+            <div><div class="fw-600"><?= htmlspecialchars($b['name']) ?></div><div class="text-muted fs-7"><?= htmlspecialchars($b['slug'] ?? '') ?></div></div>
+          </label>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <!-- STEP 4: VARYANTLAR -->
+    <div class="pim-wizard-step" id="wstep4">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-sliders text-pim-gold me-2"></i>Varyant Ayarları</h4>
+      <div class="mb-4">
+        <label class="pim-toggle-wrap mb-3">
+          <span class="pim-toggle"><input type="checkbox" id="hasVariantsToggle" onchange="toggleVariantBuilder(this.checked)"><span class="pim-toggle-slider"></span></span>
+          <span class="pim-toggle-label fw-600">Bu ürünün varyantları var</span>
+        </label>
+        <div class="text-muted fs-7">Renk, beden, numara gibi seçenekler için varyantları etkinleştirin.</div>
+      </div>
+      <div id="variantBuilderSection" style="display:none">
+        <div class="pim-section mb-4">
+          <div class="pim-section-title mb-3">Varyant Tipleri</div>
+          <div class="d-flex flex-wrap gap-2" id="varTypePills">
+            <?php foreach (['Renk','Beden','Numara','Boyut','Materyal','Paket','Kapasite'] as $vt): ?>
+            <label class="pim-btn pim-btn-ghost pim-btn-sm vtype-pill" data-type="<?= $vt ?>">
+              <input type="checkbox" name="variant_types[]" value="<?= $vt ?>" style="display:none" onchange="handleVarType(this)"> <?= $vt ?>
+            </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <div id="varTypeInputs"></div>
+        <div class="pim-section mt-4">
+          <div class="pim-section-title mb-3">Varyant Kombinasyonları</div>
+          <div id="varCombinations"><div class="pim-empty py-4"><i class="bi bi-sliders"></i><p>Varyant tipi seçip değerleri girin.</p></div></div>
+        </div>
+      </div>
+      <div id="noVariantMsg">
+        <div class="wiz-tip"><i class="bi bi-box-seam-fill"></i><div><strong class="text-white">Tekli Ürün</strong><p class="text-muted fs-7 mb-0 mt-1">Varyant olmadan tek tip ürün olarak kaydedilecek.</p></div></div>
+      </div>
+    </div>
+
+    <!-- STEP 5: FİYAT -->
+    <div class="pim-wizard-step" id="wstep5">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-currency-exchange text-pim-gold me-2"></i>Fiyatlandırma</h4>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="pim-section mb-4">
+            <div class="pim-section-title mb-3">Fiyat Yapısı</div>
+            <div class="row g-3">
+              <?php foreach ([['list_price','Liste Fiyatı'],['price','Satış Fiyatı *'],['sale_price','Kampanya Fiyatı'],['cost_price','Maliyet'],['dealer_price','Bayi Fiyatı'],['wholesale_price','Toptan Fiyat']] as [$f,$l]): ?>
+              <div class="col-md-6">
+                <label class="pim-form-label"><?= $l ?></label>
+                <div class="pim-price-input-wrap"><span class="pim-price-currency">₺</span><input class="pim-input pim-price-input" type="number" name="<?= $f ?>" id="wiz_<?= $f ?>" value="0" step="0.01" min="0"></div>
+              </div>
+              <?php endforeach; ?>
+              <div class="col-md-6">
+                <label class="pim-form-label">KDV Oranı</label>
+                <select class="pim-select" name="tax_rate"><option value="0">%0</option><option value="1">%1</option><option value="8" selected>%8</option><option value="18">%18</option><option value="20">%20</option></select>
+              </div>
+              <div class="col-md-6">
+                <label class="pim-form-label">Para Birimi</label>
+                <select class="pim-select" name="currency_code"><option value="TRY" selected>TRY</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="pim-section mb-3">
+            <div class="pim-section-title mb-3"><i class="bi bi-pie-chart"></i>Karlılık Analizi</div>
+            <div class="d-flex flex-column gap-3">
+              <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background:var(--pim-success-bg)"><span class="text-muted fs-7">Kar Marjı</span><span class="fw-700 fs-4 text-success" id="wizMargin">%0</span></div>
+              <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background:var(--pim-purple-bg)"><span class="text-muted fs-7">Markup</span><span class="fw-700 fs-4" style="color:var(--pim-purple)" id="wizMarkup">%0</span></div>
+            </div>
+          </div>
+          <div class="wiz-tip">
+            <i class="bi bi-graph-up-fill"></i>
+            <div><strong class="text-white">Fiyat Stratejisi</strong><p class="text-muted fs-7 mb-0 mt-1">Rakip fiyatlarını araştırın. %30+ kar marjı sürdürülebilir büyüme için idealdir.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6: STOK -->
+    <div class="pim-wizard-step" id="wstep6">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-boxes text-pim-gold me-2"></i>Stok & Tanımlayıcılar</h4>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="pim-section mb-4">
+            <div class="pim-section-title mb-3">Stok Bilgileri</div>
+            <div class="mb-3">
+              <label class="pim-toggle-wrap">
+                <span class="pim-toggle"><input type="hidden" name="unlimited_stock" value="0"><input type="checkbox" name="unlimited_stock" value="1" id="wizUnlimitedToggle" onchange="toggleStockField(this.checked)"><span class="pim-toggle-slider"></span></span>
+                <span class="pim-toggle-label">Sınırsız Stok</span>
+              </label>
+            </div>
+            <div id="wizStockFields">
+              <div class="pim-form-group"><label class="pim-form-label">Başlangıç Stoğu</label><input class="pim-input" type="number" name="stock" id="wizStock" value="0" min="0"></div>
+              <div class="row g-3">
+                <div class="col-4"><label class="pim-form-label">Kritik</label><input class="pim-input" type="number" name="critical_stock" value="5" min="0"></div>
+                <div class="col-4"><label class="pim-form-label">Min</label><input class="pim-input" type="number" name="min_stock" value="0" min="0"></div>
+                <div class="col-4"><label class="pim-form-label">Max</label><input class="pim-input" type="number" name="max_stock" value="9999" min="0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="pim-section">
+            <div class="pim-section-title mb-3">Tanımlayıcılar</div>
+            <div class="pim-form-group">
+              <label class="pim-form-label">SKU</label>
+              <div class="d-flex gap-2">
+                <input class="pim-input pim-input-mono" type="text" name="sku" id="wizSku" required placeholder="STO-001">
+                <button type="button" class="pim-btn pim-btn-ghost pim-btn-sm" onclick="genSKU()"><i class="bi bi-magic"></i></button>
+              </div>
+            </div>
+            <div class="pim-form-group"><label class="pim-form-label">Barkod</label><input class="pim-input pim-input-mono" type="text" name="barcode" placeholder="EAN-13"></div>
+            <div class="pim-form-group"><label class="pim-form-label">MPN</label><input class="pim-input pim-input-mono" type="text" name="mpn"></div>
+            <div class="pim-form-group"><label class="pim-form-label">GTIN</label><input class="pim-input pim-input-mono" type="text" name="gtin"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 7: MEDYA -->
+    <div class="pim-wizard-step" id="wstep7">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-images text-pim-gold me-2"></i>Medya</h4>
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="pim-section mb-4">
+            <div class="pim-section-title mb-3"><i class="bi bi-star"></i>Kapak Görseli</div>
+            <div class="pim-dropzone" id="wizCoverDrop" style="min-height:200px">
+              <input type="file" name="cover_image" accept="image/*" id="wizCoverInput" onchange="previewCover(this)">
+              <i class="bi bi-cloud-upload"></i>
+              <div class="fw-600">Kapak görseli yükle</div>
+              <div class="text-muted fs-7 mt-1">Önerilen: 800×800px</div>
+            </div>
+            <div id="wizCoverPreview" style="display:none;margin-top:12px"><img id="wizCoverImg" style="width:100%;border-radius:10px;aspect-ratio:1;object-fit:cover" alt="Kapak"></div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="pim-section">
+            <div class="pim-section-title mb-3"><i class="bi bi-images"></i>Galeri Görselleri</div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <span class="pim-badge pim-badge-muted">WebP</span><span class="pim-badge pim-badge-muted">AVIF</span><span class="pim-badge pim-badge-muted">JPG</span><span class="pim-badge pim-badge-muted">PNG</span><span class="pim-badge pim-badge-muted">GIF</span>
+            </div>
+            <div class="pim-dropzone" id="wizGalleryDrop">
+              <input type="file" name="gallery_images[]" accept="image/*" multiple id="wizGalleryInput" onchange="previewGallery(this.files)">
+              <i class="bi bi-cloud-upload"></i>
+              <div class="fw-600">Galeri görsellerini yükle</div>
+              <div class="text-muted fs-7 mt-1">Çoklu yükleme desteklenir</div>
+            </div>
+            <div class="pim-media-grid mt-3" id="wizGalleryGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 8: SEO -->
+    <div class="pim-wizard-step" id="wstep8">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-search-heart text-pim-gold me-2"></i>SEO Ayarları</h4>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="pim-section mb-4">
+            <div class="pim-section-title mb-3">Meta Bilgileri</div>
+            <div class="pim-form-group">
+              <label class="pim-form-label">Meta Başlık</label>
+              <input class="pim-input" type="text" name="seo_title" id="wizSeoTitle" maxlength="80" placeholder="Ürün başlığı – SaintMonarc" oninput="updateWizSeoPreview()">
+              <div class="pim-char-counter" id="wizTitleCount">0 / 60</div>
+            </div>
+            <div class="pim-form-group">
+              <label class="pim-form-label">Meta Açıklama</label>
+              <textarea class="pim-textarea" name="seo_description" id="wizSeoDesc" rows="3" maxlength="200" placeholder="Ürün açıklaması..." oninput="updateWizSeoPreview()"></textarea>
+              <div class="pim-char-counter" id="wizDescCount">0 / 160</div>
+            </div>
+            <div class="pim-form-group">
+              <label class="pim-form-label">Slug (Otomatik)</label>
+              <input class="pim-input pim-input-mono" type="text" name="slug" id="wizSlug" placeholder="urun-adi">
+            </div>
+            <div class="pim-form-group">
+              <label class="pim-form-label">OG Başlık</label>
+              <input class="pim-input" type="text" name="og_title">
+            </div>
+            <div class="pim-form-group">
+              <label class="pim-form-label">Robots</label>
+              <select class="pim-select" name="robots"><option value="index, follow">Index, Follow</option><option value="noindex, follow">NoIndex, Follow</option><option value="noindex, nofollow">NoIndex, NoFollow</option></select>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="pim-section mb-4">
+            <div class="pim-section-title mb-3"><i class="bi bi-google"></i>Google Önizleme</div>
+            <div class="pim-seo-preview">
+              <div class="pim-seo-url" id="wizPrevUrl">saintmonarc.com › products › ...</div>
+              <div class="pim-seo-title" id="wizPrevTitle">Ürün başlığı buraya gelecek</div>
+              <div class="pim-seo-desc" id="wizPrevDesc">Meta açıklama buraya gelecek.</div>
+            </div>
+          </div>
+          <div class="pim-section">
+            <div class="pim-section-title mb-3"><i class="bi bi-speedometer2"></i>SEO Skoru</div>
+            <div class="d-flex align-items-center gap-3">
+              <div class="pim-seo-score-ring" id="wizSeoRing" style="--score-d:0deg;--score-c:var(--pim-danger)"><div class="pim-seo-score-inner"><span class="pim-seo-score-num" id="wizSeoNum">0</span><span class="pim-seo-score-lbl">Skor</span></div></div>
+              <div class="text-muted fs-7" id="wizSeoLabel">Alanları doldurun...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 9: ÖNİZLEME -->
+    <div class="pim-wizard-step" id="wstep9">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-eye text-pim-gold me-2"></i>Ürün Önizlemesi</h4>
+      <div class="text-muted fs-7 mb-4">Lütfen tüm bilgileri kontrol edin. Değiştirmek istediğiniz adıma geri dönebilirsiniz.</div>
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="preview-card">
+            <div class="preview-img" id="previewImgWrap"><i class="bi bi-image fs-1 text-muted"></i></div>
+            <div class="p-3">
+              <div class="fw-700 text-white fs-6 mb-1" id="previewName">—</div>
+              <div class="text-muted fs-7 mb-2" id="previewDesc">—</div>
+              <div class="d-flex justify-content-between">
+                <span class="fw-700 text-pim-gold" id="previewPrice">₺0,00</span>
+                <span class="pim-badge pim-badge-muted" id="previewStock">Stok: 0</span>
+              </div>
+              <div class="d-flex gap-2 mt-2 flex-wrap">
+                <span class="pim-code" id="previewSku">SKU: —</span>
+                <span class="pim-badge pim-badge-info" id="previewCat">Kategori: —</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="pim-section">
+            <div class="pim-section-title mb-3"><i class="bi bi-check-all"></i>Kontrol Listesi</div>
+            <div id="previewChecklist">
+              <?php foreach ($steps as $i => $s): $n = $i+1; ?>
+              <div class="checklist-item"><span class="step-pending-badge" id="chk<?= $n ?>"><?= $n ?></span><span>Adım <?= $n ?>: <?= $s ?></span><a href="#" class="ms-auto pim-btn pim-btn-ghost pim-btn-sm" onclick="goToStep(<?= $n ?>);return false"><i class="bi bi-pencil"></i></a></div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 10: YAYINLA -->
+    <div class="pim-wizard-step" id="wstep10">
+      <h4 class="fw-700 text-white mb-4"><i class="bi bi-rocket-takeoff text-pim-gold me-2"></i>Yayın Ayarları</h4>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="pim-section mb-4">
+            <div class="pim-section-title mb-3">Yayın Seçeneği</div>
+            <div class="d-flex flex-column gap-3">
+              <?php
+              $pubOpts = [
+                  ['published','Hemen Yayınla','Ürün hemen mağazada görünsün','bi-rocket'],
+                  ['draft','Taslak Kaydet','Hazır olmadan sakla','bi-file-earmark'],
+                  ['passive','Pasif Kaydet','Sisteme ekle ama gösterme','bi-pause-circle'],
+              ];
+              foreach ($pubOpts as [$val, $lbl, $desc, $ico]):
+              ?>
+              <label class="pub-opt" onclick="selectPubOpt(this)">
+                <input type="radio" name="status" value="<?= $val ?>" <?= $val==='published'?'checked':'' ?>>
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi <?= $ico ?> fs-4 text-pim-gold"></i>
+                  <div><div class="fw-600"><?= $lbl ?></div><div class="text-muted fs-7"><?= $desc ?></div></div>
+                </div>
+              </label>
+              <?php endforeach; ?>
+              <label class="pub-opt" onclick="selectPubOpt(this)">
+                <input type="radio" name="status" value="coming_soon">
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi bi-calendar-event fs-4 text-pim-gold"></i>
+                  <div><div class="fw-600">Zamanlanmış Yayın</div><div class="text-muted fs-7">Belirli bir tarihte yayınla</div></div>
+                </div>
+                <div class="mt-2 ms-5" id="scheduleField" style="display:none">
+                  <input class="pim-input" type="datetime-local" name="available_from">
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="pim-section">
+            <div class="pim-section-title mb-3"><i class="bi bi-check-circle"></i>Tamamlanan Adımlar</div>
+            <div id="finalChecklist" class="d-flex flex-column gap-1">
+              <?php foreach ($steps as $i => $s): $n=$i+1; ?>
+              <div class="d-flex align-items-center gap-2 py-1"><div class="step-complete-badge"><i class="bi bi-check"></i></div><span class="fs-7"><?= $s ?></span></div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <button type="submit" class="pim-btn pim-btn-primary pim-btn-xl" id="wizFinishBtn">
+          <i class="bi bi-rocket-takeoff"></i> Ürünü Kaydet
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /wizard-body -->
+
+  <!-- ── Wizard Footer ─────────────────────────── -->
+  <div class="pim-wizard-footer">
+    <button type="button" class="pim-btn pim-btn-secondary" id="wizPrevBtn" disabled><i class="bi bi-arrow-left"></i> Geri</button>
+    <span class="text-muted fs-7" id="wizStepCounter">Adım 1 / 10</span>
+    <button type="button" class="pim-btn pim-btn-primary" id="wizNextBtn">İleri <i class="bi bi-arrow-right"></i></button>
+  </div>
+</div><!-- /wizard-wrap -->
 </form>
-
-<!-- Include Media Picker Modal -->
-<?php include dirname(__DIR__) . '/media/media_picker_modal.php'; ?>
+</div><!-- /pim-module -->
 
 <script>
-    tinymce.init({
-        selector: '#descriptionEditor',
-        theme: 'silver',
-        skin: 'oxide-dark',
-        content_css: 'dark',
-        height: 350,
-        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
-        toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-        background_color: 'rgba(255,255,255,0.03)'
+/* ── TinyMCE ───────────────────────────────── */
+tinymce.init({selector:'#wizDesc',skin:'oxide-dark',content_css:'dark',height:280,menubar:false,promotion:false,toolbar:'bold italic | bullist numlist | link',plugins:'link lists'});
+
+/* ── Tag Input ─────────────────────────────── */
+PIM.tagInput.init('wizTagInput','wizTagsHidden',[',','Enter']);
+
+/* ── Pricing ───────────────────────────────── */
+PIM.pricing.bindLive('wiz_price','wiz_cost_price','wizMargin','wizMarkup');
+
+/* ── SEO char counters ─────────────────────── */
+PIM.charCounter.bind('wizSeoTitle','wizTitleCount',{warn:50,max:60});
+PIM.charCounter.bind('wizSeoDesc','wizDescCount',{warn:140,max:160});
+
+/* ── Wizard State ──────────────────────────── */
+const TOTAL_STEPS = 10;
+let currentStep = 1;
+function goToStep(n){
+    document.querySelectorAll('.pim-wizard-step').forEach((s,i)=>s.classList.toggle('active',i+1===n));
+    document.querySelectorAll('.pim-step').forEach((d,i)=>{
+        d.classList.toggle('active',i+1===n);
+        d.classList.toggle('done',i+1<n);
     });
-
-    const costInput = document.getElementById('costPriceInput');
-    const priceInput = document.getElementById('priceInput');
-    const taxInput = document.getElementById('taxRateInput');
-    
-    const profitSpan = document.getElementById('profitSpan');
-    const marginSpan = document.getElementById('marginSpan');
-    const rateSpan = document.getElementById('rateSpan');
-    const taxIncInput = document.getElementById('taxIncludedPriceInput');
-    const currencySelect = document.getElementById('currencySelect');
-
-    function calculateProfit() {
-        const cost = parseFloat(costInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const taxRate = parseFloat(taxInput.value) || 0;
-        const currency = currencySelect.value;
-        const sym = currency === 'TRY' ? '₺' : (currency === 'USD' ? '$' : '€');
-
-        const profit = price - cost;
-        const margin = price > 0 ? (profit / price) * 100 : 0;
-        const rate = cost > 0 ? (profit / cost) * 100 : 0;
-        const taxInc = price * (1 + (taxRate / 100));
-
-        profitSpan.textContent = profit.toFixed(2) + ' ' + sym;
-        marginSpan.textContent = margin.toFixed(2) + '%';
-        rateSpan.textContent = rate.toFixed(2) + '%';
-        taxIncInput.value = taxInc.toFixed(2) + ' ' + sym;
-    }
-
-    [costInput, priceInput, taxInput, currencySelect].forEach(input => {
-        input.addEventListener('input', calculateProfit);
-        input.addEventListener('change', calculateProfit);
+    document.querySelectorAll('.pim-step-connector').forEach((c,i)=>c.classList.toggle('done',i+1<n));
+    document.getElementById('wizPrevBtn').disabled = n===1;
+    document.getElementById('wizNextBtn').style.display = n===TOTAL_STEPS?'none':'';
+    document.getElementById('wizStepCounter').textContent = `Adım ${n} / ${TOTAL_STEPS}`;
+    currentStep = n;
+    if(n===9) aggregatePreview();
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('wizPrevBtn').addEventListener('click',()=>goToStep(currentStep-1));
+document.getElementById('wizNextBtn').addEventListener('click',()=>{
+    if(validateWizStep(currentStep)) goToStep(currentStep+1);
+});
+function validateWizStep(n){
+    const step = document.getElementById('wstep'+n);
+    let ok = true;
+    step.querySelectorAll('[required]').forEach(el=>{
+        if(!el.value.trim()){el.style.borderColor='var(--pim-danger)';el.focus();ok=false;}
+        else el.style.borderColor='';
     });
-    
-    function generateVariantsTable() {
-        const selectedCheks = document.querySelectorAll('.attr-checkbox:checked');
-        if (selectedCheks.length === 0) {
-            alert('Lütfen en az bir varyant değeri seçin.');
-            return;
-        }
+    if(!ok) PIM.toast.error('Lütfen zorunlu alanları doldurun.');
+    return ok;
+}
 
-        const groups = {};
-        selectedCheks.forEach(cb => {
-            const attrId = cb.getAttribute('data-attr-id');
-            const attrName = cb.getAttribute('data-attr-name');
-            const valId = cb.getAttribute('data-val-id');
-            const valName = cb.getAttribute('data-val-name');
-            
-            if (!groups[attrId]) {
-                groups[attrId] = [];
-            }
-            groups[attrId].push({ attrId, attrName, valId, valName });
-        });
+/* ── Name → slug, preview ──────────────────── */
+document.getElementById('wizProductName').addEventListener('input',function(){
+    const v = this.value;
+    document.getElementById('wizNamePreview').textContent = v || 'Ürün adı buraya gelecek...';
+    const slug = v.toLowerCase()
+        .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+        .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const slugEl = document.getElementById('wizSlug');
+    if(slugEl && !slugEl._edited) slugEl.value = slug;
+    document.getElementById('wizPrevUrl').textContent = 'saintmonarc.com › products › ' + slug;
+    document.getElementById('wizPrevTitle').textContent = document.getElementById('wizSeoTitle').value || v || 'Ürün başlığı...';
+});
+document.getElementById('wizSlug').addEventListener('input',function(){ this._edited=true; });
 
-        const cartesian = (arrays) => {
-            return arrays.reduce((acc, curr) => {
-                const res = [];
-                acc.forEach(a => {
-                    curr.forEach(b => {
-                        res.push([...a, b]);
-                    });
-                });
-                return res;
-            }, [[]]);
-        };
+/* ── SKU Generator ─────────────────────────── */
+function genSKU(){
+    const pre = (document.getElementById('wizProductName').value||'PRD').substring(0,3).toUpperCase();
+    document.getElementById('wizSku').value = pre+'-'+Date.now().toString(36).toUpperCase();
+}
 
-        const combinations = cartesian(Object.values(groups));
-        const tbody = document.getElementById('variantsTableBody');
-        tbody.innerHTML = '';
-        document.getElementById('variantsTable').classList.remove('d-none');
+/* ── SEO Preview ───────────────────────────── */
+function updateWizSeoPreview(){
+    document.getElementById('wizPrevTitle').textContent = document.getElementById('wizSeoTitle').value || document.getElementById('wizProductName').value || '—';
+    document.getElementById('wizPrevDesc').textContent  = document.getElementById('wizSeoDesc').value  || '—';
+    const score = PIM.seoScore.calculate({title:document.getElementById('wizSeoTitle').value, description:document.getElementById('wizSeoDesc').value});
+    PIM.seoScore.render(score,'wizSeoRing');
+    document.getElementById('wizSeoNum').textContent = score;
+    document.getElementById('wizSeoLabel').textContent = score>=70?'🟢 İyi SEO':score>=40?'🟡 Orta':'🔴 Zayıf';
+}
 
-        combinations.forEach((combo, index) => {
-            const labels = combo.map(c => c.valName).join(' / ');
-            const skuVal = document.getElementsByName('sku')[0].value + '-' + combo.map(c => c.valName.substring(0,2).toUpperCase()).join('-');
-            
-            let attrHiddenInputs = '';
-            combo.forEach(c => {
-                attrHiddenInputs += `<input type="hidden" name="variants[${index}][attributes][${c.attrId}]" value="${c.valId}">`;
-            });
+/* ── Brand selection ───────────────────────── */
+function selectBrand(el){
+    document.querySelectorAll('.brand-card-opt').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected'); el.querySelector('input').checked=true;
+}
 
-            const tr = document.createElement('tr');
-            tr.className = 'align-middle border-bottom border-secondary-subtle';
-            tr.innerHTML = `
-                <td>
-                    <span class="font-weight-600 text-white">${labels}</span>
-                    ${attrHiddenInputs}
-                </td>
-                <td><input type="text" name="variants[${index}][sku]" value="${skuVal}" class="form-control bg-dark border-secondary text-white py-1 px-2 fs-8"></td>
-                <td><input type="text" name="variants[${index}][barcode]" class="form-control bg-dark border-secondary text-white py-1 px-2 fs-8"></td>
-                <td><input type="number" step="0.01" name="variants[${index}][price]" class="form-control bg-dark border-secondary text-white py-1 px-2 fs-8" value="${priceInput.value}"></td>
-                <td><input type="number" step="0.01" name="variants[${index}][cost_price]" class="form-control bg-dark border-secondary text-white py-1 px-2 fs-8" value="${costInput.value}"></td>
-                <td><input type="number" name="variants[${index}][stock]" class="form-control bg-dark border-secondary text-white py-1 px-2 fs-8" value="10"></td>
-                <td>
-                    <input type="hidden" name="variants[${index}][image_id]" id="var_img_${index}" value="">
-                    <button type="button" class="btn btn-secondary border-0 p-1 fs-8" onclick="openVarMediaPicker(${index})"><i class="bi bi-image"></i></button>
-                    <span id="var_preview_${index}" style="margin-left: 5px;"></span>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+/* ── Publish option ────────────────────────── */
+function selectPubOpt(el){
+    document.querySelectorAll('.pub-opt').forEach(p=>p.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input').checked=true;
+    const sched = document.getElementById('scheduleField');
+    if(sched) sched.style.display = el.querySelector('input').value==='coming_soon'?'':'none';
+}
+document.querySelectorAll('.pub-opt').forEach(p=>p.addEventListener('click',function(){selectPubOpt(this);}));
+document.querySelector('.pub-opt').classList.add('selected');
 
-    let activeVarIndex = null;
-    function openVarMediaPicker(index) {
-        activeVarIndex = index;
-        openMediaPicker('variant_picker');
-    }
-
-    let fileRowIdx = 0;
-    function addFileRow() {
-        const container = document.getElementById('additionalFilesList');
-        const div = document.createElement('div');
-        div.className = 'row g-2 mb-2 align-items-center';
-        div.id = 'file-row-' + fileRowIdx;
-        div.innerHTML = `
-            <div class="col-5">
-                <input type="text" name="product_files[${fileRowIdx}][name]" class="form-control bg-dark border-secondary text-white fs-8" placeholder="Dosya Açıklaması">
-            </div>
-            <div class="col-5">
-                <input type="text" name="product_files[${fileRowIdx}][path]" class="form-control bg-dark border-secondary text-white fs-8" placeholder="Dosya Yolu">
-            </div>
-            <div class="col-2">
-                <button type="button" class="btn btn-danger border-0 p-1 fs-8 w-100" onclick="removeFileRow(${fileRowIdx})"><i class="bi bi-trash"></i></button>
-            </div>
-        `;
+/* ── Variant Builder ───────────────────────── */
+function toggleVariantBuilder(v){
+    document.getElementById('variantBuilderSection').style.display = v?'':'none';
+    document.getElementById('noVariantMsg').style.display = v?'none':'';
+}
+function handleVarType(cb){
+    const lbl = cb.closest('.vtype-pill');
+    lbl.classList.toggle('active',cb.checked);
+    lbl.style.cssText = cb.checked?'color:var(--pim-gold);border-color:var(--pim-gold);background:var(--pim-gold-glow)':'';
+    renderVarInputs();
+}
+function renderVarInputs(){
+    const container = document.getElementById('varTypeInputs');
+    container.innerHTML='';
+    document.querySelectorAll('.vtype-pill input:checked').forEach(cb=>{
+        const div=document.createElement('div');
+        div.className='pim-section mb-3';
+        div.innerHTML=`<div class="pim-section-title mb-2">${cb.value} Değerleri</div>
+            <input class="pim-input" type="text" placeholder="Örn: Kırmızı, Mavi, Yeşil (virgülle ayırın)" oninput="renderCombinations()">`;
         container.appendChild(div);
-        fileRowIdx++;
+    });
+}
+function renderCombinations(){
+    document.getElementById('varCombinations').innerHTML='<div class="text-muted fs-7 p-3">Kombinasyonlar oluşturulacak...</div>';
+}
+
+/* ── Media Preview ─────────────────────────── */
+function previewCover(input){
+    const file=input.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=e=>{
+        document.getElementById('wizCoverImg').src=e.target.result;
+        document.getElementById('wizCoverPreview').style.display='';
+    };
+    r.readAsDataURL(file);
+}
+function previewGallery(files){
+    const grid=document.getElementById('wizGalleryGrid');
+    Array.from(files).forEach(f=>{
+        if(!f.type.startsWith('image/')) return;
+        const r=new FileReader();
+        r.onload=e=>{
+            const item=document.createElement('div');
+            item.className='pim-media-item';
+            item.innerHTML=`<img src="${e.target.result}" loading="lazy" alt=""><div class="pim-media-overlay"><button type="button" class="pim-btn pim-btn-danger pim-btn-sm pim-btn-icon" onclick="this.closest('.pim-media-item').remove()"><i class="bi bi-trash3"></i></button></div>`;
+            grid.appendChild(item);
+        };
+        r.readAsDataURL(f);
+    });
+}
+PIM.dropzone.init('wizGalleryDrop', files=>previewGallery(files));
+
+/* ── Step 9 Preview Aggregation ────────────── */
+function aggregatePreview(){
+    document.getElementById('previewName').textContent  = document.getElementById('wizProductName').value || '—';
+    document.getElementById('previewPrice').textContent = '₺' + (parseFloat(document.getElementById('wiz_price').value)||0).toFixed(2);
+    document.getElementById('previewStock').textContent = 'Stok: ' + (document.getElementById('wizStock').value||'0');
+    document.getElementById('previewSku').textContent   = 'SKU: ' + (document.getElementById('wizSku').value||'—');
+    const catSel = document.getElementById('wizCategory');
+    document.getElementById('previewCat').textContent   = catSel.options[catSel.selectedIndex]?.text || 'Kategori: —';
+    document.querySelectorAll('.checklist-item .step-pending-badge').forEach((b,i)=>{
+        b.className='step-complete-badge'; b.innerHTML='<i class="bi bi-check"></i>';
+    });
+    // cover preview
+    const covImg = document.getElementById('wizCoverImg');
+    if(covImg && covImg.src) {
+        const wrap = document.getElementById('previewImgWrap');
+        wrap.innerHTML=`<img src="${covImg.src}" style="width:100%;height:200px;object-fit:cover" alt="">`;
     }
+}
 
-    function removeFileRow(idx) {
-        document.getElementById('file-row-' + idx).remove();
-    }
+/* ── Category Path Preview ─────────────────── */
+document.getElementById('wizCategory').addEventListener('change',function(){
+    const opt = this.options[this.selectedIndex];
+    document.getElementById('catPathPreview').textContent = opt.value ? '🏷 ' + opt.text.trim() : 'Kategori seçilmedi.';
+});
 
-    let activeMediaTarget = null;
-    let selectedGalleryImages = [];
-
-    function openMediaPicker(targetType) {
-        activeMediaTarget = targetType;
-        
-        SM_MediaPicker.init({
-            singleSelect: (targetType !== 'gallery'),
-            allowedTypes: targetType === 'video' ? ['mp4', 'mov', 'avi', 'mkv'] : ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'pdf'],
-            callback: function(selectedItems) {
-                if (selectedItems.length > 0) {
-                    if (activeMediaTarget === 'cover') {
-                        const item = selectedItems[0];
-                        document.getElementById('cover_image_id').value = item.id;
-                        document.getElementById('cover_preview').innerHTML = `<img src="<?= url("/") ?>/${item.filepath}" class="img-fluid rounded-4" style="max-height:120px; object-fit:contain;">`;
-                    } else if (activeMediaTarget === 'video') {
-                        const item = selectedItems[0];
-                        document.getElementById('promo_video_id').value = item.id;
-                        document.getElementById('video_preview').innerHTML = `<div class="d-flex align-items-center text-success"><i class="bi bi-check-circle me-2"></i> ${item.filename} seçildi</div>`;
-                    } else if (activeMediaTarget === 'variant_picker') {
-                        const item = selectedItems[0];
-                        document.getElementById('var_img_' + activeVarIndex).value = item.id;
-                        document.getElementById('var_preview_' + activeVarIndex).innerHTML = `<img src="<?= url("/") ?>/${item.filepath}" style="max-height: 25px; max-width: 40px; object-fit: contain;">`;
-                    } else if (activeMediaTarget === 'gallery') {
-                        selectedGalleryImages = [...selectedGalleryImages, ...selectedItems];
-                        renderGalleryPreviews();
-                    }
-                }
-            }
-        });
-    }
-
-    function renderGalleryPreviews() {
-        const previewDiv = document.getElementById('gallery_previews');
-        const inputsDiv = document.getElementById('gallery_inputs_container');
-        previewDiv.innerHTML = '';
-        inputsDiv.innerHTML = '';
-
-        selectedGalleryImages.forEach((item, idx) => {
-            const col = document.createElement('div');
-            col.className = 'col-3 position-relative';
-            col.innerHTML = `
-                <img src="<?= url("/") ?>/${item.filepath}" class="img-fluid rounded-3 border border-secondary" style="max-height: 70px; object-fit: cover;">
-                <button type="button" class="position-absolute top-0 end-0 bg-danger text-white border-0 rounded-circle fs-9" style="width:18px; height:18px; line-height:12px; margin-top:-5px; margin-right:5px;" onclick="removeGalleryImg(${idx})">×</button>
-            `;
-            previewDiv.appendChild(col);
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'gallery_image_ids[]';
-            input.value = item.id;
-            inputsDiv.appendChild(input);
-        });
-    }
-
-    function removeGalleryImg(idx) {
-        selectedGalleryImages.splice(idx, 1);
-        renderGalleryPreviews();
-    }
+/* ── Unlimited Stock Toggle ────────────────── */
+function toggleStockField(checked){
+    const f=document.getElementById('wizStockFields');
+    f.style.opacity=checked?'.3':'1'; f.style.pointerEvents=checked?'none':'auto';
+}
 </script>
 
 <?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

@@ -14,6 +14,12 @@ $adminUsername = $_SESSION['admin_username'] ?? 'Yönetici';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Enterprise Design System CSS Files -->
+    <link rel="stylesheet" href="/SaintMonarc/public/css/tokens.css">
+    <link rel="stylesheet" href="/SaintMonarc/public/css/components.css">
+    <link rel="stylesheet" href="/SaintMonarc/public/css/layout.css">
+    <!-- Enterprise PIM V2 Design System -->
+    <link rel="stylesheet" href="/SaintMonarc/public/css/pim.css">
     <style>
         :root {
             --sm-dark: #0f0c20;
@@ -34,12 +40,27 @@ $adminUsername = $_SESSION['admin_username'] ?? 'Yönetici';
 
         #sidebar-wrapper {
             min-height: 100vh;
+            max-height: 100vh;
+            overflow-y: auto;
             width: 260px;
             background-color: var(--sm-dark);
             border-right: 1px solid var(--sm-border);
             transition: margin 0.25s ease-out;
             position: fixed;
             z-index: 1000;
+        }
+        #sidebar-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+        #sidebar-wrapper::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #sidebar-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+        }
+        #sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--sm-gold);
         }
 
         #sidebar-wrapper .sidebar-heading {
@@ -84,6 +105,24 @@ $adminUsername = $_SESSION['admin_username'] ?? 'Yönetici';
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--sm-text-muted);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: color 0.2s ease;
+        }
+
+        .menu-category:hover {
+            color: var(--sm-gold);
+        }
+
+        .menu-category .bi-chevron-down {
+            transition: transform 0.2s ease;
+            font-size: 10px;
+        }
+
+        .menu-category[aria-expanded="false"] .bi-chevron-down {
+            transform: rotate(-90deg);
         }
 
         #page-content-wrapper {
@@ -186,6 +225,40 @@ $adminUsername = $_SESSION['admin_username'] ?? 'Yönetici';
             #menu-toggle {
                 display: block;
             }
+        }
+
+        /* Enterprise Design System Form Element Visibility Fixes */
+        .form-label, label {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        .text-muted {
+            color: var(--sm-text-muted, #9ca3af) !important;
+        }
+        h4.text-white, h5.text-white, h6.text-white {
+            color: #ffffff !important;
+        }
+        .search-input {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .search-input:focus {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            border-color: var(--sm-gold, #c5a880) !important;
+            box-shadow: 0 0 10px rgba(197, 168, 128, 0.2) !important;
+        }
+        .w-100.search-input:focus {
+            width: 100% !important;
+        }
+        select.form-select {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        select.form-select option {
+            background-color: #141125 !important;
+            color: #ffffff !important;
         }
     </style>
 </head>

@@ -100,6 +100,28 @@ class Application {
         $this->container->singleton(\App\Services\AttributeService::class, \App\Services\AttributeService::class);
         $this->container->singleton(\App\Repositories\VariantRepository::class, \App\Repositories\VariantRepository::class);
         $this->container->singleton(\App\Services\VariantService::class, \App\Services\VariantService::class);
+        $this->container->singleton(\App\Repositories\OrderRepository::class, \App\Repositories\OrderRepository::class);
+        $this->container->singleton(\App\Services\OrderService::class, \App\Services\OrderService::class);
+        $this->container->singleton(\App\Repositories\CustomerRepository::class, \App\Repositories\CustomerRepository::class);
+        $this->container->singleton(\App\Services\CustomerService::class, \App\Services\CustomerService::class);
+        $this->container->singleton(\App\Repositories\PromotionRepository::class, \App\Repositories\PromotionRepository::class);
+        $this->container->singleton(\App\Services\PromotionService::class, \App\Services\PromotionService::class);
+        $this->container->singleton(\App\Repositories\AiRecommendationRepository::class, \App\Repositories\AiRecommendationRepository::class);
+        $this->container->singleton(\App\Services\AiRecommendationServiceInterface::class, \App\Services\OpenAiRecommendationService::class);
+        $this->container->singleton(\App\Repositories\SearchRepository::class, \App\Repositories\SearchRepository::class);
+        $this->container->singleton(\App\Services\SearchService::class, \App\Services\SearchService::class);
+        $this->container->singleton(\App\Repositories\FinanceRepository::class, \App\Repositories\FinanceRepository::class);
+        $this->container->singleton(\App\Services\FinanceService::class, \App\Services\FinanceService::class);
+        $this->container->singleton(\App\Repositories\ShippingRepository::class, \App\Repositories\ShippingRepository::class);
+        $this->container->singleton(\App\Services\ShippingService::class, \App\Services\ShippingService::class);
+        $this->container->singleton(\App\Repositories\VendorRepository::class, \App\Repositories\VendorRepository::class);
+        $this->container->singleton(\App\Services\VendorService::class, \App\Services\VendorService::class);
+        $this->container->singleton(\App\Repositories\WorkflowRepository::class, \App\Repositories\WorkflowRepository::class);
+        $this->container->singleton(\App\Services\WorkflowService::class, \App\Services\WorkflowService::class);
+        $this->container->singleton(\App\Repositories\ProcurementRepository::class, \App\Repositories\ProcurementRepository::class);
+        $this->container->singleton(\App\Services\ProcurementService::class, \App\Services\ProcurementService::class);
+        $this->container->singleton(\App\Controllers\StoreController::class, \App\Controllers\StoreController::class);
+
         
         // Register Event Listeners
         $dispatcher = $this->container->get(EventDispatcherInterface::class);

@@ -1,0 +1,84 @@
+:root {
+    /* Spacing Tokens */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+
+    /* Radius Tokens */
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    /* Shadow Tokens */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-gold: 0 0 15px rgba(212, 175, 55, 0.15);
+
+    /* Z-Index Tokens */
+    --z-index-dropdown: 1000;
+    --z-index-sticky: 1020;
+    --z-index-fixed: 1030;
+    --z-index-modal-backdrop: 1040;
+    --z-index-modal: 1050;
+    --z-index-popover: 1060;
+    --z-index-tooltip: 1070;
+
+    /* Opacity Tokens */
+    --opacity-hover: 0.85;
+    --opacity-muted: 0.6;
+    --opacity-disabled: 0.4;
+
+    /* Transition Tokens */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Typography Tokens */
+    --font-sans: 'Inter', sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+    --font-size-2xl: 32px;
+
+    /* Theme-specific Colors (Dark Theme Default) */
+    --bg-darkest: #0D0D0D;
+    --bg-darker: #141414;
+    --bg-dark: #181818;
+    --bg-card: #1E1E1E;
+    --bg-hover: #262626;
+    --sm-gold: #D4AF37;
+    --sm-gold-hover: #F3E5AB;
+    --sm-gold-glow: rgba(212, 175, 55, 0.12);
+    --sm-border: rgba(255, 255, 255, 0.06);
+    --sm-text: #F3F4F6;
+    --sm-text-muted: #9CA3AF;
+    --sm-success: #22C55E;
+    --sm-warning: #F59E0B;
+    --sm-error: #EF4444;
+    --sm-info: #3B82F6;
+}
+
+/* Light Theme Variables */
+html[data-theme='light'] {
+    --bg-darkest: #F9FAFB;
+    --bg-darker: #F3F4F6;
+    --bg-dark: #E5E7EB;
+    --bg-card: #FFFFFF;
+    --bg-hover: #F3F4F6;
+    --sm-gold: #B8860B;
+    --sm-gold-hover: #8B6508;
+    --sm-gold-glow: rgba(184, 134, 11, 0.12);
+    --sm-border: rgba(0, 0, 0, 0.08);
+    --sm-text: #1F2937;
+    --sm-text-muted: #4B5563;
+}

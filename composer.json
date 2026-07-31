@@ -12,7 +12,8 @@
             "Core\\": "core/",
             "App\\": "app/",
             "Modules\\": "modules/",
-            "Admin\\": "admin/"
+            "Admin\\": "admin/",
+            "Resources\\": "resources/"
         }
     },
     "minimum-stability": "stable",

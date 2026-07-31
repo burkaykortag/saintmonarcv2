@@ -46,4 +46,8 @@ class AdminDashboardController extends Controller {
             'analytics' => $analytics
         ]);
     }
+
+    public function components(Request $request, Response $response): string {
+        return $this->render('admin/components/showcase', []);
+    }
 }

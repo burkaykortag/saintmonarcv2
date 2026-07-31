@@ -1,0 +1,123 @@
+/* Component Variants & Micro Interactions */
+
+/* Button Sizes & Variants */
+.btn-xs {
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: var(--radius-xs);
+}
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+}
+.btn-md {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: var(--radius-md);
+}
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 16px;
+    border-radius: var(--radius-lg);
+}
+.btn-xl {
+    padding: 18px 36px;
+    font-size: 18px;
+    border-radius: var(--radius-xl);
+}
+
+/* Premium Transitions & Hover Effects */
+.btn, .card, .list-group-item, .nav-icon {
+    transition: var(--transition-normal);
+}
+.btn:hover {
+    transform: translateY(-1px);
+    opacity: var(--opacity-hover);
+}
+.btn:active {
+    transform: translateY(1px);
+}
+
+/* Card Variations */
+.card-premium {
+    background-color: var(--bg-card);
+    border: 1px solid var(--sm-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+.card-premium:hover {
+    box-shadow: var(--shadow-lg), var(--shadow-gold);
+    transform: translateY(-2px);
+}
+
+/* Table Related Styles */
+.table-responsive {
+    border-radius: var(--radius-md);
+    overflow: auto;
+}
+.table-sticky-header th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--bg-darker);
+}
+.table-sticky-column td:first-child,
+.table-sticky-column th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 11;
+    background-color: var(--bg-darker);
+    border-right: 2px solid var(--sm-border);
+}
+
+/* Modal and Drawer Transitions */
+.modal.fade .modal-dialog {
+    transform: scale(0.95);
+    transition: var(--transition-normal);
+}
+.modal.show .modal-dialog {
+    transform: scale(1);
+}
+
+/* Offcanvas Drawers */
+.offcanvas-start, .offcanvas-end, .offcanvas-bottom {
+    background-color: var(--bg-darker);
+    border-color: var(--sm-border);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Empty States & Loaders */
+.empty-state {
+    padding: var(--spacing-2xl);
+    text-align: center;
+    border: 1px dashed var(--sm-border);
+    border-radius: var(--radius-lg);
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+/* Micro Animations & Loading Skeletons */
+@keyframes skeleton-loading {
+    0% {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+    50% {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+    100% {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+}
+.placeholder-skeleton {
+    animation: skeleton-loading 1.5s infinite ease-in-out;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
+
+/* Typographic System classes */
+.text-h1 { font-size: var(--font-size-2xl); font-weight: 800; }
+.text-h2 { font-size: var(--font-size-xl); font-weight: 700; }
+.text-h3 { font-size: var(--font-size-lg); font-weight: 600; }
+.text-body { font-size: var(--font-size-md); font-weight: 400; }
+.text-caption { font-size: var(--font-size-sm); color: var(--sm-text-muted); }
+.text-helper { font-size: var(--font-size-xs); color: var(--sm-error); }

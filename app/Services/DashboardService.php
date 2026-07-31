@@ -66,8 +66,39 @@ class DashboardService {
             'recent_orders' => $recentOrders,
             'recent_members' => $recentMembers,
             'category_sales' => $categorySales,
-            'chart_data' => $chartData
+            'chart_data' => $chartData,
+            'procurement' => $this->getProcurementStats()
         ];
+    }
+
+    private function getProcurementStats(): array {
+        try {
+            $totalPurchasing = $this->db->query("SELECT COALESCE(SUM(grand_total), 0) as total FROM purchase_orders WHERE status = 'completed' AND deleted_at IS NULL")[0]['total'] ?? 0;
+            $pendingPOs = $this->db->query("SELECT COUNT(*) as cnt FROM purchase_orders WHERE status IN ('pending_approval', 'approved', 'sent') AND deleted_at IS NULL")[0]['cnt'] ?? 0;
+            $pendingDeliveries = $this->db->query("SELECT COUNT(*) as cnt FROM purchase_orders WHERE status = 'sent' AND deleted_at IS NULL")[0]['cnt'] ?? 0;
+            $delayedOrders = $this->db->query("SELECT COUNT(*) as cnt FROM purchase_orders WHERE status = 'sent' AND expected_delivery < CURDATE() AND deleted_at IS NULL")[0]['cnt'] ?? 0;
+            
+            $bestSupplier = $this->db->query("SELECT company_name FROM suppliers WHERE deleted_at IS NULL ORDER BY score DESC LIMIT 1")[0]['company_name'] ?? 'Tedarikçi Yok';
+            $riskySupplier = $this->db->query("SELECT company_name FROM suppliers WHERE deleted_at IS NULL ORDER BY score ASC LIMIT 1")[0]['company_name'] ?? 'Tedarikçi Yok';
+
+            return [
+                'total_purchasing' => (float)$totalPurchasing,
+                'pending_pos' => (int)$pendingPOs,
+                'pending_deliveries' => (int)$pendingDeliveries,
+                'delayed_orders' => (int)$delayedOrders,
+                'best_supplier' => $bestSupplier,
+                'risky_supplier' => $riskySupplier
+            ];
+        } catch (\Throwable $t) {
+            return [
+                'total_purchasing' => 0.0,
+                'pending_pos' => 0,
+                'pending_deliveries' => 0,
+                'delayed_orders' => 0,
+                'best_supplier' => 'Yok',
+                'risky_supplier' => 'Yok'
+            ];
+        }
     }
 
     private function getDateBounds(string $filter, ?string $startDate, ?string $endDate): array {

@@ -16,30 +16,31 @@ define('ROOT_DIR', dirname(__DIR__));
 
 if (file_exists(ROOT_DIR . '/vendor/autoload.php')) {
     require_once ROOT_DIR . '/vendor/autoload.php';
-} else {
-    // Development fallback autoloader
-    spl_autoload_register(function (string $class) {
-        $prefixMap = [
-            'Core\\' => 'core/',
-            'App\\' => 'app/',
-            'Modules\\' => 'modules/',
-            'Admin\\' => 'admin/'
-        ];
-
-        foreach ($prefixMap as $prefix => $baseDir) {
-            $len = strlen($prefix);
-            if (strncmp($prefix, $class, $len) !== 0) {
-                continue;
-            }
-            $relativeClass = substr($class, $len);
-            $file = ROOT_DIR . '/' . $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
-            if (file_exists($file)) {
-                require $file;
-                return;
-            }
-        }
-    });
 }
+
+// Development and dynamic fallback autoloader to resolve newly created files
+spl_autoload_register(function (string $class) {
+    $prefixMap = [
+        'Core\\' => 'core/',
+        'App\\' => 'app/',
+        'Modules\\' => 'modules/',
+        'Admin\\' => 'admin/',
+        'Resources\\' => 'resources/'
+    ];
+
+    foreach ($prefixMap as $prefix => $baseDir) {
+        $len = strlen($prefix);
+        if (strncmp($prefix, $class, $len) !== 0) {
+            continue;
+        }
+        $relativeClass = substr($class, $len);
+        $file = ROOT_DIR . '/' . $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
 
 use Core\Application;
 

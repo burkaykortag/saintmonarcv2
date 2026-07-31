@@ -29,8 +29,40 @@ class View {
         }
         
         extract($params);
+        
+        // Step 1: Render the template body to capture internal variables (like $title)
         ob_start();
         include $path;
+        $body = ob_get_clean();
+        
+        // Step 2: Render layout wrapper around the body
+        ob_start();
+        $hasHeader = str_contains($body, 'id="wrapper"') || str_contains($body, '<body');
+        
+        if (str_starts_with($template, 'admin/') && !$hasHeader) {
+            $headerPath = $this->rootDir . "/resources/views/admin/layouts/header.php";
+            $footerPath = $this->rootDir . "/resources/views/admin/layouts/footer.php";
+            if (file_exists($headerPath)) {
+                include $headerPath;
+            }
+            echo $body;
+            if (file_exists($footerPath)) {
+                include $footerPath;
+            }
+        } elseif (str_starts_with($template, 'store/') && !$hasHeader) {
+            $headerPath = $this->rootDir . "/resources/views/store/layouts/header.php";
+            $footerPath = $this->rootDir . "/resources/views/store/layouts/footer.php";
+            if (file_exists($headerPath)) {
+                include $headerPath;
+            }
+            echo $body;
+            if (file_exists($footerPath)) {
+                include $footerPath;
+            }
+        } else {
+            echo $body;
+        }
+        
         return ob_get_clean();
     }
 }

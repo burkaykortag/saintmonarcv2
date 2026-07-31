@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 use App\Controllers\AuthController;
 use App\Controllers\PasswordController;
+use App\Controllers\StoreController;
 
 $router->get('/login', [AuthController::class, 'showLogin'], ['guest']);
 $router->post('/login', [AuthController::class, 'login']);
@@ -26,10 +27,16 @@ $router->post('/password/reset', [PasswordController::class, 'reset']);
 $router->get('/sessions', [AuthController::class, 'showSessions'], ['auth']);
 $router->post('/sessions/revoke', [AuthController::class, 'revokeSession'], ['auth']);
 
-$router->get('/', function($request, $response) {
-    $view = \Core\Application::getInstance()->getContainer()->get(\Core\View\View::class);
-    return $view->render('home');
-});
+$router->get('/', [StoreController::class, 'home']);
+$router->get('/products', [StoreController::class, 'products']);
+$router->get('/category/.*', [StoreController::class, 'category']);
+$router->get('/brand/.*', [StoreController::class, 'brand']);
+$router->get('/product/.*', [StoreController::class, 'productDetail']);
+$router->get('/cart', [StoreController::class, 'cart']);
+$router->get('/checkout', [StoreController::class, 'checkout']);
+$router->get('/account', [StoreController::class, 'account']);
+$router->get('/blog', [StoreController::class, 'blog']);
+$router->get('/search', [StoreController::class, 'search']);
 
 // Public Brand Page
 $router->get('/brands/.*', [\App\Controllers\BrandController::class, 'showPublicBrandPage']);

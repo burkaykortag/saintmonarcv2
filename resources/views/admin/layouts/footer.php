@@ -31,5 +31,9 @@
         sidebar.classList.toggle("toggled");
     });
 </script>
+<!-- Enterprise Design System JavaScript -->
+<script src="/SaintMonarc/public/js/design-system.js"></script>
+<!-- Enterprise PIM V2 JavaScript -->
+<script src="/SaintMonarc/public/js/pim.js"></script>
 </body>
 </html>

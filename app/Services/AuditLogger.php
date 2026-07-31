@@ -14,8 +14,8 @@ class AuditLogger {
     }
 
     public function logActivity(string $action, string $description): void {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (php_sapi_name() !== 'cli' && session_status() === PHP_SESSION_NONE) {
+            @session_start();
         }
 
         $adminId = $_SESSION['admin_id'] ?? null;
@@ -42,8 +42,8 @@ class AuditLogger {
     }
 
     public function logAudit(string $event, string $auditableType, int $auditableId, ?array $oldValues, ?array $newValues): void {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (php_sapi_name() !== 'cli' && session_status() === PHP_SESSION_NONE) {
+            @session_start();
         }
 
         $adminId = $_SESSION['admin_id'] ?? null;
