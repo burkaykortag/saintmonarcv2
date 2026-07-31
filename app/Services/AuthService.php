@@ -44,8 +44,8 @@ class AuthService {
 
         $this->resetFailedAttempts((int)$user['id'], 'users');
 
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+            @session_start();
         }
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
@@ -81,8 +81,8 @@ class AuthService {
 
         $this->resetFailedAttempts((int)$admin['id'], 'admins');
 
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+            @session_start();
         }
         $_SESSION['admin_id'] = $admin['id'];
         $_SESSION['admin_username'] = $admin['username'];
