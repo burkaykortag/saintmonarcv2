@@ -128,6 +128,16 @@ class Application {
                 $this->container->get(\App\Services\RbacService::class)
             );
         });
+        $this->container->singleton(\App\Services\MarketplaceOrderService::class, function() {
+            return new \App\Services\MarketplaceOrderService(
+                $this->container->get(DatabaseInterface::class),
+                $this->container->get(\App\Repositories\OrderRepository::class),
+                $this->container->get(\App\Repositories\VendorRepository::class),
+                $this->container->get(\App\Repositories\ProductRepository::class),
+                $this->container->get(\App\Services\WarehouseService::class),
+                $this->container->get(\App\Services\AuditLogger::class)
+            );
+        });
         $this->container->singleton(\App\Controllers\StoreController::class, \App\Controllers\StoreController::class);
 
         

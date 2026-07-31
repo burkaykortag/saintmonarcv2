@@ -268,7 +268,16 @@ $router->post('/admin/shipping/shipments/create', [ShippingController::class, 's
 $router->get('/admin/shipping/returns', [ShippingController::class, 'returns'], ['admin', 'permission:manage_returns']);
 $router->post('/admin/shipping/returns/update', [ShippingController::class, 'updateReturnStatus'], ['admin', 'permission:manage_returns', 'csrf']);
 $router->get('/admin/shipping/reports', [ShippingController::class, 'reports'], ['admin', 'permission:shipping_reports']);
-// Marketplace & Vendor Routes
+// Marketplace & Vendor Routes (Sprint 35 VEYRA Platform Upgrade)
+$router->get('/admin/marketplace/dashboard',    [MarketplaceAdminController::class, 'dashboard'],    ['admin', 'permission:view_marketplace']);
+$router->get('/admin/marketplace/applications', [MarketplaceAdminController::class, 'applications'], ['admin', 'permission:approve_vendors']);
+$router->post('/admin/marketplace/applications/approve', [MarketplaceAdminController::class, 'approveApplication'], ['admin', 'permission:approve_vendors', 'csrf']);
+$router->post('/admin/marketplace/applications/reject',  [MarketplaceAdminController::class, 'rejectApplication'],  ['admin', 'permission:approve_vendors', 'csrf']);
+$router->get('/admin/marketplace/moderation',   [MarketplaceAdminController::class, 'moderation'],   ['admin', 'permission:moderate_products']);
+$router->post('/admin/marketplace/moderation/action', [MarketplaceAdminController::class, 'moderateProductAction'], ['admin', 'permission:moderate_products', 'csrf']);
+$router->get('/admin/marketplace/payouts',      [MarketplaceAdminController::class, 'payouts'],      ['admin', 'permission:view_platform_finance']);
+$router->post('/admin/marketplace/payouts/process', [MarketplaceAdminController::class, 'processPayoutAction'], ['admin', 'permission:view_platform_finance', 'csrf']);
+
 $router->get('/admin/vendors', [VendorController::class, 'index'], ['admin', 'permission:view_vendors']);
 $router->get('/admin/vendors/create', [VendorController::class, 'create'], ['admin', 'permission:create_vendor']);
 $router->post('/admin/vendors/create', [VendorController::class, 'store'], ['admin', 'permission:create_vendor', 'csrf']);
@@ -277,6 +286,11 @@ $router->post('/admin/vendors/update', [VendorController::class, 'update'], ['ad
 $router->get('/admin/vendors/reports', [VendorController::class, 'reports'], ['admin', 'permission:vendor_reports']);
 $router->get('/admin/vendors/payments', [VendorController::class, 'payments'], ['admin', 'permission:vendor_payments']);
 $router->get('/admin/vendors/wallet', [VendorController::class, 'wallet'], ['admin', 'permission:vendor_wallet']);
+$router->post('/admin/vendors/payout-request', [VendorController::class, 'requestPayout'], ['admin', 'permission:vendor_wallet', 'csrf']);
+
+// Vendor Portal Routes (/vendor)
+$router->get('/vendor/dashboard', [VendorController::class, 'vendorDashboard']);
+$router->post('/vendor/apply', [VendorController::class, 'submitApplication']);
 
 // Workflow Automation Routes
 $router->get('/admin/workflows', [WorkflowController::class, 'index'], ['admin', 'permission:view_workflows']);

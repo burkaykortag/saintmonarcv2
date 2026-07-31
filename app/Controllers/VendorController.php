@@ -96,6 +96,64 @@ class VendorController extends Controller
         ]);
     }
 
+    // --- VENDOR PORTAL ACTIONS (/vendor/*) ---
+
+    /**
+     * Vendor Portal Dashboard
+     */
+    public function vendorDashboard(Request $request, Response $response): string
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $vendorId = $_SESSION['vendor_id'] ?? 1; // Default to 1 (SaintMonarc) if logged in via vendor
+
+        $vendor = $this->service->getVendor($vendorId);
+        $wallet = $this->service->getWallet($vendorId);
+        $stats = $this->service->getStatistics($vendorId);
+        $products = $this->service->getVendorProducts($vendorId);
+        $orders = $this->service->listVendors();
+
+        return $this->render('vendor/dashboard', [
+            'vendor' => $vendor,
+            'wallet' => $wallet,
+            'stats' => $stats,
+            'productCount' => count($products)
+        ]);
+    }
+
+    /**
+     * Vendor Application Submit (Public Onboarding)
+     */
+    public function submitApplication(Request $request, Response $response): void
+    {
+        try {
+            $data = $request->post();
+            $appId = $this->service->submitApplication($data);
+            $response->redirect(url('/vendor/apply?success=' . urlencode('Satıcı başvurunuz başarıyla alındı. İnceleme sonrası e-posta ile bilgilendirileceksiniz (Başvuru No: #' . $appId . ')')));
+        } catch (Exception $e) {
+            $response->redirect(url('/vendor/apply?error=' . urlencode($e->getMessage())));
+        }
+    }
+
+    /**
+     * Vendor Request Payout
+     */
+    public function requestPayout(Request $request, Response $response): void
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $vendorId = $_SESSION['vendor_id'] ?? 1;
+
+        $amount = (float)$request->post('amount');
+        $iban = $request->post('iban') ?? '';
+        $notes = $request->post('notes') ?? null;
+
+        try {
+            $this->service->requestPayoutWithIban($vendorId, $amount, $iban, $notes);
+            $response->redirect(url('/admin/vendors/wallet?vendor_id=' . $vendorId . '&success=' . urlencode('Ödeme talebiniz oluşturuldu.')));
+        } catch (Exception $e) {
+            $response->redirect(url('/admin/vendors/wallet?vendor_id=' . $vendorId . '&error=' . urlencode($e->getMessage())));
+        }
+    }
+
     // --- REST API ENDPOINTS ---
 
     public function apiList(Request $request, Response $response)
@@ -133,7 +191,6 @@ class VendorController extends Controller
     public function apiOrders(Request $request, Response $response)
     {
         $vendorId = (int)$request->get('vendor_id', 1);
-        // Mock list of orders for the API endpoint response
         $orders = [
             [
                 'id' => 101,

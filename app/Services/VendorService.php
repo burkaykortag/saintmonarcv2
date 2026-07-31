@@ -232,6 +232,142 @@ class VendorService
         return $stats;
     }
 
+    // --- TENANT DATA ISOLATION ASSERTION ---
+
+    /**
+     * Asserts that the currently logged-in vendor user owns the requested resource.
+     * Prevents IDOR and cross-vendor data leakage.
+     * Platform Super Admins (vendorId = null or 0) bypass this check.
+     */
+    public function assertVendorOwnership(?int $currentVendorId, int $targetVendorId): void
+    {
+        if ($currentVendorId === null || $currentVendorId === 0) {
+            // Super admin bypass
+            return;
+        }
+
+        if ((int)$currentVendorId !== (int)$targetVendorId) {
+            throw new Exception("Erişim engellendi: Bu işleme veya veriye erişim yetkiniz bulunmamaktadır.");
+        }
+    }
+
+    // --- VENDOR ONBOARDING APPLICATIONS ---
+
+    public function submitApplication(array $data): int
+    {
+        if (empty($data['company_name']) || empty($data['contact_name']) || empty($data['email']) || empty($data['phone'])) {
+            throw new Exception("Şirket adı, yetkili adı, e-posta ve telefon alanları zorunludur.");
+        }
+        return $this->repository->createApplication($data);
+    }
+
+    public function getApplications(array $filters = []): array
+    {
+        return $this->repository->getApplications($filters);
+    }
+
+    public function approveApplication(int $applicationId): int
+    {
+        $app = $this->repository->getApplication($applicationId);
+        if (!$app) {
+            throw new Exception("Satıcı başvurusu bulunamadı.");
+        }
+
+        if ($app['status'] === 'approved') {
+            throw new Exception("Bu başvuru zaten onaylanmış.");
+        }
+
+        // 1. Create vendor record
+        $vendorId = $this->createVendor([
+            'name' => $app['company_name'],
+            'email' => $app['email'],
+            'phone' => $app['phone'],
+            'tax_number' => $app['tax_number'],
+            'tax_office' => $app['tax_office'],
+            'company_title' => $app['company_name'],
+            'iban' => $app['iban'],
+            'status' => 'active',
+            'commission_rate' => 10.00
+        ]);
+
+        // 2. Create default vendor user account (username: email)
+        $username = explode('@', $app['email'])[0] . '_' . rand(100, 999);
+        $tempPassword = 'Vendor' . rand(10000, 99999) . '!';
+        $this->registerVendorUser([
+            'vendor_id' => $vendorId,
+            'username' => $username,
+            'email' => $app['email'],
+            'password' => $tempPassword,
+            'role' => 'owner'
+        ]);
+
+        // 3. Update application status
+        $this->repository->updateApplicationStatus($applicationId, 'approved');
+
+        return $vendorId;
+    }
+
+    public function rejectApplication(int $applicationId, string $reason): bool
+    {
+        return $this->repository->updateApplicationStatus($applicationId, 'rejected', $reason);
+    }
+
+    // --- PAYOUT REQUESTS WITH IBAN ---
+
+    public function requestPayoutWithIban(int $vendorId, float $amount, string $iban, ?string $notes = null): int
+    {
+        $wallet = $this->getWallet($vendorId);
+        if (!$wallet || (float)$wallet['balance'] < $amount) {
+            throw new Exception("Yetersiz bakiye. Mevcut kullanılabilir bakiye: ₺" . number_format((float)($wallet['balance'] ?? 0), 2));
+        }
+
+        if ($amount < 100.00) {
+            throw new Exception("Minimum ödeme talep tutarı ₺100.00 TL'dir.");
+        }
+
+        $res = $this->repository->createPayoutRequest([
+            'vendor_id' => $vendorId,
+            'amount' => $amount,
+            'iban' => $iban,
+            'notes' => $notes
+        ]);
+        $this->clearCache($vendorId);
+        return $res;
+    }
+
+    public function processPayoutStatus(int $payoutId, string $status, ?string $receiptFile = null): bool
+    {
+        $payout = $this->repository->getPayouts();
+        $target = array_filter($payout, fn($p) => $p['id'] == $payoutId);
+        $res = $this->repository->updatePayoutStatus($payoutId, $status, $receiptFile);
+        if ($res && !empty($target)) {
+            $vId = (int)reset($target)['vendor_id'];
+            $this->clearCache($vId);
+        }
+        return $res;
+    }
+
+    public function getPayouts(?int $vendorId = null): array
+    {
+        return $this->repository->getPayouts($vendorId);
+    }
+
+    // --- PRODUCT MODERATION ---
+
+    public function getPendingProducts(): array
+    {
+        return $this->repository->getPendingProducts();
+    }
+
+    public function moderateProduct(int $productId, string $status): bool
+    {
+        $allowed = ['approved', 'rejected', 'suspended', 'published'];
+        if (!in_array($status, $allowed)) {
+            throw new Exception("Geçersiz onay durumu.");
+        }
+        return $this->repository->updateProductApprovalStatus($productId, $status);
+    }
+
     // --- INTERNAL HELPERS ---
 
     private function generateSlug(string $text): string

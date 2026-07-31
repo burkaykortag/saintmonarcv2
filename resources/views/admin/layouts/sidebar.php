@@ -122,7 +122,11 @@ function getSidebarActiveItem(string $currentUri): string {
     if (str_starts_with($currentUri, '/admin/components')) return 'system_components';
     if (str_starts_with($currentUri, '/admin/search')) return 'system_search';
     
-    // Pazaryeri
+    // Pazaryeri (VEYRA Platform)
+    if (str_starts_with($currentUri, '/admin/marketplace/dashboard')) return 'marketplace_dashboard';
+    if (str_starts_with($currentUri, '/admin/marketplace/applications')) return 'marketplace_applications';
+    if (str_starts_with($currentUri, '/admin/marketplace/moderation')) return 'marketplace_moderation';
+    if (str_starts_with($currentUri, '/admin/marketplace/payouts')) return 'marketplace_payouts';
     if (str_starts_with($currentUri, '/admin/vendors/reports')) return 'vendor_reports';
     if (str_starts_with($currentUri, '/admin/vendors/payments')) return 'vendor_payments';
     if (str_starts_with($currentUri, '/admin/vendors/wallet')) return 'vendor_wallet';
@@ -719,29 +723,53 @@ $menus = [
     ],
     'vendors' => [
         'id' => 'menu-pazaryeri',
-        'title' => 'Pazaryeri',
+        'title' => 'Pazaryeri Platform',
         'icon' => 'bi-shop',
         'items' => [
             [
                 'type' => 'link',
+                'id' => 'marketplace_dashboard',
+                'title' => 'Pazaryeri Genel Bakış',
+                'url' => '/admin/marketplace/dashboard',
+                'permission' => 'view_marketplace',
+                'icon' => 'bi-speedometer2'
+            ],
+            [
+                'type' => 'link',
+                'id' => 'marketplace_applications',
+                'title' => 'Satıcı Başvuruları',
+                'url' => '/admin/marketplace/applications',
+                'permission' => 'approve_vendors',
+                'icon' => 'bi-person-plus'
+            ],
+            [
+                'type' => 'link',
+                'id' => 'marketplace_moderation',
+                'title' => 'Ürün Moderasyonu',
+                'url' => '/admin/marketplace/moderation',
+                'permission' => 'moderate_products',
+                'icon' => 'bi-shield-check'
+            ],
+            [
+                'type' => 'link',
                 'id' => 'vendors',
-                'title' => 'Satıcı Yönetimi',
+                'title' => 'Tüm Satıcılar',
                 'url' => '/admin/vendors',
                 'permission' => 'view_vendors',
                 'icon' => 'bi-people'
             ],
             [
                 'type' => 'link',
-                'id' => 'vendor_payments',
-                'title' => 'Satıcı Ödemeleri',
-                'url' => '/admin/vendors/payments',
-                'permission' => 'vendor_payments',
+                'id' => 'marketplace_payouts',
+                'title' => 'Hakediş Ödemeleri',
+                'url' => '/admin/marketplace/payouts',
+                'permission' => 'view_platform_finance',
                 'icon' => 'bi-cash-coin'
             ],
             [
                 'type' => 'link',
                 'id' => 'vendor_wallet',
-                'title' => 'Satıcı Cüzdanı',
+                'title' => 'Satıcı Cüzdanları',
                 'url' => '/admin/vendors/wallet',
                 'permission' => 'vendor_wallet',
                 'icon' => 'bi-wallet'
@@ -749,7 +777,7 @@ $menus = [
             [
                 'type' => 'link',
                 'id' => 'vendor_reports',
-                'title' => 'Satıcı Raporları',
+                'title' => 'Satıcı Analitiği',
                 'url' => '/admin/vendors/reports',
                 'permission' => 'vendor_reports',
                 'icon' => 'bi-bar-chart-line'
