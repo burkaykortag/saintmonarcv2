@@ -9,13 +9,19 @@ class Security {
         return $token;
     }
 
-    public function validateCsrfToken(string $token): bool {
+    public function validateCsrfToken(?string $token): bool {
+        if (empty($token)) {
+            return false;
+        }
         $storedToken = Application::$app->session->get('csrf_token');
-        return $storedToken && hash_equals($storedToken, $token);
+        return is_string($storedToken) && hash_equals($storedToken, $token);
     }
     
-    public static function escape(string $string): string {
-        return htmlspecialchars($string, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    public static function escape(?string $string): string {
+        if ($string === null) {
+            return '';
+        }
+        return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
     
     public function hashPassword(string $password): string {

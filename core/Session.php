@@ -6,15 +6,17 @@ class Session {
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
             // Secure session cookie parameters
-            session_set_cookie_params([
-                'lifetime' => 0,
-                'path' => '/',
-                'domain' => Config::get('app.domain', ''),
-                'secure' => Config::get('app.secure', true),
-                'httponly' => true,
-                'samesite' => 'Lax'
-            ]);
-            session_start();
+            if (!headers_sent()) {
+                session_set_cookie_params([
+                    'lifetime' => 0,
+                    'path' => '/',
+                    'domain' => Config::get('app.domain', ''),
+                    'secure' => Config::get('app.secure', true),
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+                ]);
+            }
+            @session_start();
         }
     }
 

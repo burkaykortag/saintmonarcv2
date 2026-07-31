@@ -47,8 +47,12 @@ class AuthService {
         if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             @session_start();
         }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            @session_regenerate_id(true);
+        }
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
+        $_SESSION['last_activity'] = time();
 
         $this->logLoginHistory((int)$user['id'], null, $request, 'success');
 
@@ -84,9 +88,13 @@ class AuthService {
         if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             @session_start();
         }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            @session_regenerate_id(true);
+        }
         $_SESSION['admin_id'] = $admin['id'];
         $_SESSION['admin_username'] = $admin['username'];
         $_SESSION['is_super_admin'] = (bool)$admin['is_super'];
+        $_SESSION['last_activity'] = time();
 
         $this->logLoginHistory(null, (int)$admin['id'], $request, 'success');
 
@@ -94,8 +102,8 @@ class AuthService {
     }
 
     public function logout(): void {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+            @session_start();
         }
         
         $userId = $_SESSION['user_id'] ?? null;
@@ -120,7 +128,15 @@ class AuthService {
             );
         }
 
-        session_destroy();
+        $_SESSION = [];
+        if (ini_get("session.use_cookies") && !headers_sent()) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        @session_destroy();
     }
 
     public function getUserSessions(int $userId): array {

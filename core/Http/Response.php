@@ -45,6 +45,16 @@ class Response {
 
     public function send(): void {
         http_response_code($this->statusCode);
+
+        // Standard Security Headers
+        if (!headers_sent()) {
+            header('X-Content-Type-Options: nosniff');
+            header('X-Frame-Options: SAMEORIGIN');
+            header('X-XSS-Protection: 1; mode=block');
+            header('Referrer-Policy: strict-origin-when-cross-origin');
+            header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; img-src 'self' https: data: blob:; font-src 'self' https: data:;");
+        }
+
         foreach ($this->headers as $name => $value) {
             header("{$name}: {$value}");
         }
