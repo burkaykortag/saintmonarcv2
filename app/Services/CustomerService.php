@@ -116,6 +116,8 @@ class CustomerService {
 
         $data['first_name'] = $data['first_name'] ?? $current['first_name'] ?? '';
         $data['last_name'] = $data['last_name'] ?? $current['last_name'] ?? '';
+        $data['email'] = $data['email'] ?? $current['email'] ?? '';
+        $data['phone'] = $data['phone'] ?? $current['phone'] ?? '';
 
         $isTransactionOwner = !$this->db->inTransaction();
         if ($isTransactionOwner) {
