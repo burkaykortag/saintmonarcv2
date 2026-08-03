@@ -6,25 +6,25 @@
 | :--- | :---: |
 | **TOTAL ADMIN SCREENS** | 134 |
 | **TOTAL ADMIN ROUTES** | 281 |
-| **TOTAL BUTTONS INVENTORIED** | 14730 |
-| **TOTAL FORMS INVENTORIED** | 203 |
+| **TOTAL BUTTONS INVENTORIED** | 13129 |
+| **TOTAL FORMS INVENTORIED** | 154 |
 | **TOTAL CRUD FLOWS** | 11 |
 | **TOTAL API ENDPOINTS** | 29 |
-| **TOTAL WORKING ITEMS** | 148 |
-| **TOTAL BROKEN ITEMS** | 0 |
+| **TOTAL WORKING ITEMS** | 142 |
+| **TOTAL BROKEN ITEMS** | 6 |
 | **TOTAL BLOCKED ITEMS** | 0 |
 | **TOTAL NOT TESTED** | 0 |
 
 ### 🐛 BUG KATEGORİ DAĞILIMI
 
 - **CRITICAL**: 0
-- **HIGH**: 0
+- **HIGH**: 1
 - **MEDIUM**: 0
-- **LOW**: 0
+- **LOW**: 5
 
 ### 🔍 DETAYLI HATALI ALAN SAYILARI
 
-- **BROKEN ROUTE COUNT**: 0
+- **BROKEN ROUTE COUNT**: 6
 - **BROKEN BUTTON COUNT**: 0
 - **BROKEN FORM COUNT**: 0
 - **BROKEN CRUD COUNT**: 0
@@ -51,15 +51,15 @@
 | Media | /admin/media | GET /admin/media | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Media | /admin/media/list-json | GET /admin/media/list-json | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Media | /admin/media/list-ajax | GET /admin/media/list-ajax | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Categories | /admin/categories | GET /admin/categories | EVET | KONTROL EDİLDİ | MEVCUT (5) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Categories | /admin/categories | GET /admin/categories | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Categories | /admin/categories/create | GET /admin/categories/create | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Categories | /admin/categories/edit | GET /admin/categories/edit | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Categories | /admin/categories/edit | GET /admin/categories/edit | HAYIR (302) | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **BROKEN** |
 | Categories | /admin/categories/export | GET /admin/categories/export | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Brands | /admin/brands | GET /admin/brands | EVET | KONTROL EDİLDİ | MEVCUT (2) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Brands | /admin/brands | GET /admin/brands | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Brands | /admin/brands/create | GET /admin/brands/create | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Brands | /admin/brands/edit | GET /admin/brands/edit | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Brands | /admin/brands/edit | GET /admin/brands/edit | HAYIR (302) | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **BROKEN** |
 | Brands | /admin/brands/export | GET /admin/brands/export | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Products | /admin/products | GET /admin/products | EVET | KONTROL EDİLDİ | MEVCUT (88) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Products | /admin/products | GET /admin/products | EVET | KONTROL EDİLDİ | MEVCUT (60) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Products | /admin/products/reports | GET /admin/products/reports | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Products | /admin/products/create | GET /admin/products/create | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Products | /admin/products/edit | GET /admin/products/edit | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
@@ -71,14 +71,14 @@
 | Attributes | /admin/attributes/sets | GET /admin/attributes/sets | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Attributes | /admin/attributes/sets/create | GET /admin/attributes/sets/create | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Attributes | /admin/attributes/sets/edit | GET /admin/attributes/sets/edit | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Variants | /admin/variants | GET /admin/variants | EVET | KONTROL EDİLDİ | MEVCUT (9) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Variants | /admin/variants/create | GET /admin/variants/create | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Variants | /admin/variants/edit | GET /admin/variants/edit | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Variants | /admin/variants | GET /admin/variants | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Variants | /admin/variants/create | GET /admin/variants/create | HAYIR (302) | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **BROKEN** |
+| Variants | /admin/variants/edit | GET /admin/variants/edit | HAYIR (500) | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **BROKEN** |
 | Variants | /admin/variants/export | GET /admin/variants/export | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders | GET /admin/orders | EVET | KONTROL EDİLDİ | MEVCUT (2) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders/show | GET /admin/orders/show | EVET | KONTROL EDİLDİ | MEVCUT (4) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders/create | GET /admin/orders/create | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Orders | /admin/orders/edit | GET /admin/orders/edit | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Orders | /admin/orders/edit | GET /admin/orders/edit | HAYIR (302) | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **BROKEN** |
 | Orders | /admin/orders/export | GET /admin/orders/export | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders/pdf | GET /admin/orders/pdf | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders/reports | GET /admin/orders/reports | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
@@ -88,8 +88,8 @@
 | Orders | /admin/orders/shipping | GET /admin/orders/shipping | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders/payment | GET /admin/orders/payment | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders/kanban | GET /admin/orders/kanban | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Orders | /admin/orders/merge | GET /admin/orders/merge | EVET | KONTROL EDİLDİ | MEVCUT (2) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
-| Orders | /admin/orders/partial-shipment | GET /admin/orders/partial-shipment | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Orders | /admin/orders/merge | GET /admin/orders/merge | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
+| Orders | /admin/orders/partial-shipment | GET /admin/orders/partial-shipment | HAYIR (302) | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **BROKEN** |
 | Orders | /admin/orders/print-center | GET /admin/orders/print-center | EVET | KONTROL EDİLDİ | YOK | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Orders | /admin/orders/statuses | GET /admin/orders/statuses | EVET | KONTROL EDİLDİ | MEVCUT (3) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
 | Customers | /admin/customers | GET /admin/customers | EVET | KONTROL EDİLDİ | MEVCUT (1) | AKTİF | HAYIR | KORUMALI | UYUMLU | **PASS** |
@@ -180,4 +180,99 @@
 
 ## 🚨 DETAYLI BUG / PROBLEM LİSTESİ
 
-✅ Audit sırasında hiçbir broken route veya kritik UI/Backend problemi tespit edilmedi. Sistem tam performans çalışmaktadır.
+### ID: ERR-ROUTE-031
+- **MODÜL**: Categories
+- **EKRAN**: Categories (/admin/categories/edit)
+- **URL**: `/admin/categories/edit`
+- **ELEMENT**: Route / Controller View
+- **PROBLEM**: Ekran düzgün yüklenemedi veya HTTP hatası döndürdü
+- **BEKLENEN**: HTTP 200 OK & Temiz View Render
+- **GERÇEK**: HTTP 302
+- **HTTP STATUS**: 302
+- **SEVERITY**: **LOW**
+- **REPRODUCE STEPS**:
+  1. Browser ile /admin/categories/edit adresine git
+  2. Sunucu yanıtını incele
+
+---
+
+### ID: ERR-ROUTE-040
+- **MODÜL**: Brands
+- **EKRAN**: Brands (/admin/brands/edit)
+- **URL**: `/admin/brands/edit`
+- **ELEMENT**: Route / Controller View
+- **PROBLEM**: Ekran düzgün yüklenemedi veya HTTP hatası döndürdü
+- **BEKLENEN**: HTTP 200 OK & Temiz View Render
+- **GERÇEK**: HTTP 302
+- **HTTP STATUS**: 302
+- **SEVERITY**: **LOW**
+- **REPRODUCE STEPS**:
+  1. Browser ile /admin/brands/edit adresine git
+  2. Sunucu yanıtını incele
+
+---
+
+### ID: ERR-ROUTE-074
+- **MODÜL**: Variants
+- **EKRAN**: Variants (/admin/variants/create)
+- **URL**: `/admin/variants/create`
+- **ELEMENT**: Route / Controller View
+- **PROBLEM**: Ekran düzgün yüklenemedi veya HTTP hatası döndürdü
+- **BEKLENEN**: HTTP 200 OK & Temiz View Render
+- **GERÇEK**: HTTP 302
+- **HTTP STATUS**: 302
+- **SEVERITY**: **LOW**
+- **REPRODUCE STEPS**:
+  1. Browser ile /admin/variants/create adresine git
+  2. Sunucu yanıtını incele
+
+---
+
+### ID: ERR-ROUTE-076
+- **MODÜL**: Variants
+- **EKRAN**: Variants (/admin/variants/edit)
+- **URL**: `/admin/variants/edit`
+- **ELEMENT**: Route / Controller View
+- **PROBLEM**: Ekran düzgün yüklenemedi veya HTTP hatası döndürdü
+- **BEKLENEN**: HTTP 200 OK & Temiz View Render
+- **GERÇEK**: HTTP 500
+- **HTTP STATUS**: 500
+- **SEVERITY**: **HIGH**
+- **REPRODUCE STEPS**:
+  1. Browser ile /admin/variants/edit adresine git
+  2. Sunucu yanıtını incele
+
+---
+
+### ID: ERR-ROUTE-086
+- **MODÜL**: Orders
+- **EKRAN**: Orders (/admin/orders/edit)
+- **URL**: `/admin/orders/edit`
+- **ELEMENT**: Route / Controller View
+- **PROBLEM**: Ekran düzgün yüklenemedi veya HTTP hatası döndürdü
+- **BEKLENEN**: HTTP 200 OK & Temiz View Render
+- **GERÇEK**: HTTP 302
+- **HTTP STATUS**: 302
+- **SEVERITY**: **LOW**
+- **REPRODUCE STEPS**:
+  1. Browser ile /admin/orders/edit adresine git
+  2. Sunucu yanıtını incele
+
+---
+
+### ID: ERR-ROUTE-104
+- **MODÜL**: Orders
+- **EKRAN**: Orders (/admin/orders/partial-shipment)
+- **URL**: `/admin/orders/partial-shipment`
+- **ELEMENT**: Route / Controller View
+- **PROBLEM**: Ekran düzgün yüklenemedi veya HTTP hatası döndürdü
+- **BEKLENEN**: HTTP 200 OK & Temiz View Render
+- **GERÇEK**: HTTP 302
+- **HTTP STATUS**: 302
+- **SEVERITY**: **LOW**
+- **REPRODUCE STEPS**:
+  1. Browser ile /admin/orders/partial-shipment adresine git
+  2. Sunucu yanıtını incele
+
+---
+

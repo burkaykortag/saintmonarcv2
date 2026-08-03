@@ -20,15 +20,17 @@ $adminUsername = $_SESSION['admin_username'] ?? 'Yönetici';
     <link rel="stylesheet" href="/SaintMonarc/public/css/layout.css">
     <!-- Enterprise PIM V2 Design System -->
     <link rel="stylesheet" href="/SaintMonarc/public/css/pim.css">
+    <!-- Premium Dark/Gold Design System -->
+    <link rel="stylesheet" href="/SaintMonarc/public/css/saintmonarc-dark-gold.css">
     <style>
         :root {
-            --sm-dark: #0f0c20;
-            --sm-darker: #060210;
-            --sm-dark-card: rgba(255, 255, 255, 0.02);
-            --sm-gold: #c5a880;
-            --sm-gold-hover: #e5d1b8;
-            --sm-border: rgba(255, 255, 255, 0.08);
-            --sm-text-muted: #64748b;
+            --sm-dark: #14131B;
+            --sm-darker: #08070D;
+            --sm-dark-card: #181720;
+            --sm-gold: #D4AF37;
+            --sm-gold-hover: #E5C766;
+            --sm-border: rgba(212, 175, 55, 0.18);
+            --sm-text-muted: #AAA7B2;
         }
 
         body {
