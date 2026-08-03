@@ -607,4 +607,11 @@ class ProcurementService {
 
         return $score;
     }
+
+    /**
+     * Düşük stok önerilerini getirir (Alias for getAiPurchasingAssistantSuggestions)
+     */
+    public function getLowStockSuggestions(): array {
+        return $this->getAiPurchasingAssistantSuggestions();
+    }
 }

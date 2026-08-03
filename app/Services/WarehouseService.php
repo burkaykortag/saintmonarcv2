@@ -303,4 +303,15 @@ class WarehouseService {
             [':tot' => $totalQty, ':pid' => $productId]
         );
     }
+
+    /**
+     * Ürünün tüm depolardaki toplam stok miktarını getirir
+     */
+    public function getProductTotalStock(int $productId): int {
+        $totals = $this->db->query(
+            "SELECT COALESCE(SUM(stock), 0) as tot FROM inventories WHERE product_id = :pid",
+            [':pid' => $productId]
+        );
+        return (int)($totals[0]['tot'] ?? 0);
+    }
 }

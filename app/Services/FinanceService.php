@@ -42,6 +42,19 @@ class FinanceService {
     }
 
     /**
+     * Fatura oluşturur.
+     */
+    public function createInvoice(array $data, array $items = []): int {
+        if (empty($data['invoice_number'])) {
+            $data['invoice_number'] = $this->generateInvoiceNumber($data['invoice_type'] ?? 'sales');
+        }
+        if (empty($data['uuid'])) {
+            $data['uuid'] = bin2hex(random_bytes(16));
+        }
+        return $this->repository->createInvoice($data, $items);
+    }
+
+    /**
      * KDV ve Vergileri Hesaplar.
      */
     public function calculateTaxes(float $subTotal, float $taxRatePercent = 20.00): array {
