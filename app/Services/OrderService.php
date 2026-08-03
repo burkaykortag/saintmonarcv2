@@ -597,17 +597,25 @@ class OrderService {
      */
     private function decreaseStock(int $productId, ?int $variantId, int $qty): void {
         if ($variantId) {
-            // Varyant stok
+            $rows = $this->db->query("SELECT stock FROM inventories WHERE product_id = :pid AND variant_id = :vid FOR UPDATE", [':pid' => $productId, ':vid' => $variantId]);
+            $currentStock = !empty($rows) ? (int)$rows[0]['stock'] : 0;
+            if ($currentStock < $qty) {
+                throw new Exception("Yetersiz stok! Mevcut Stok: {$currentStock}, Talep Edilen: {$qty}");
+            }
             $this->db->execute(
-                "UPDATE inventories SET stock = GREATEST(0, stock - :qty) 
+                "UPDATE inventories SET stock = stock - :qty 
                  WHERE product_id = :pid AND variant_id = :vid",
                 [':qty' => $qty, ':pid' => $productId, ':vid' => $variantId]
             );
         } else {
-            // Ana ürün stok
+            $rows = $this->db->query("SELECT stock FROM inventories WHERE product_id = :pid AND (variant_id IS NULL OR variant_id = 0) FOR UPDATE", [':pid' => $productId]);
+            $currentStock = !empty($rows) ? (int)$rows[0]['stock'] : 0;
+            if ($currentStock < $qty) {
+                throw new Exception("Yetersiz stok! Mevcut Stok: {$currentStock}, Talep Edilen: {$qty}");
+            }
             $this->db->execute(
-                "UPDATE inventories SET stock = GREATEST(0, stock - :qty) 
-                 WHERE product_id = :pid AND variant_id IS NULL",
+                "UPDATE inventories SET stock = stock - :qty 
+                 WHERE product_id = :pid AND (variant_id IS NULL OR variant_id = 0)",
                 [':qty' => $qty, ':pid' => $productId]
             );
         }

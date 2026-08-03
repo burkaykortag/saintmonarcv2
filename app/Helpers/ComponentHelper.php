@@ -59,8 +59,18 @@ class ComponentHelper {
                 $html .= "<li class='breadcrumb-item'><a href='{$url}' style='color: #64748b; text-decoration: none; transition: color 0.2s;'>{$title}</a></li>";
             }
         }
-        $html .= "</ol></nav>";
-        return $html;
+        return $html . "</ol></nav>";
+    }
+
+    public static function slugify(string $text): string {
+        $text = str_replace(
+            ['ğ', 'Ğ', 'ü', 'Ü', 'ş', 'Ş', 'ı', 'İ', 'ö', 'Ö', 'ç', 'Ç', '–', '—'],
+            ['g', 'g', 'u', 'u', 's', 's', 'i', 'i', 'o', 'o', 'c', 'c', '-', '-'],
+            $text
+        );
+        $text = preg_replace('/[^a-zA-Z0-9\s-]/', '', $text);
+        $text = preg_replace('/[\s-]+/', '-', $text);
+        return strtolower(trim($text, '-'));
     }
 
     public static function emptyState(string $message, string $subMessage = ''): string {
