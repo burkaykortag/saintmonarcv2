@@ -292,4 +292,11 @@ class OrderRepository {
         }
         return $this->db->execute("DELETE FROM order_statuses WHERE code = :code AND is_system = 0", [':code' => $code]);
     }
+
+    /**
+     * Siparişin durumunu günceller.
+     */
+    public function updateOrderStatus(int $id, string $status): bool {
+        return $this->db->execute("UPDATE orders SET status = :status, updated_at = NOW() WHERE id = :id", [':status' => $status, ':id' => $id]);
+    }
 }

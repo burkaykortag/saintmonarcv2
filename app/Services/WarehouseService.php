@@ -314,4 +314,11 @@ class WarehouseService {
         );
         return (int)($totals[0]['tot'] ?? 0);
     }
+
+    /**
+     * Depoları listeler
+     */
+    public function listWarehouses(array $filters = []): array {
+        return $this->repository->getAll($filters);
+    }
 }
