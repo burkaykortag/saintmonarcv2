@@ -74,6 +74,7 @@ include dirname(__DIR__) . '/layouts/header.php';
     </div>
     <div class="d-flex gap-2">
         <form action="<?= url('/admin/variants/bulk') ?>" method="POST" id="bulkForm" class="d-flex align-items-center gap-2">
+            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
             <input type="hidden" name="action" id="bulkActionInput" value="">
             <div id="bulkIdsContainer"></div>
 
@@ -169,6 +170,7 @@ include dirname(__DIR__) . '/layouts/header.php';
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
                                 <form action="<?= url('/admin/variants/delete') ?>" method="POST" onsubmit="return confirm('Bu varyantı silmek istediğinize emin misiniz?');" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                                     <input type="hidden" name="id" value="<?= $v['id'] ?>">
                                     <button type="submit" class="btn btn-sm btn-danger bg-opacity-10 border-0 p-2" title="Sil">
                                         <i class="bi bi-trash text-danger"></i>

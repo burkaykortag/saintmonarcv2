@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – Depolar Arası Transferler | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 $security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
 $csrfToken = $security->generateCsrfToken();
 ?>
@@ -191,4 +191,4 @@ function submitTransfer() {
     });
 }
 </script>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

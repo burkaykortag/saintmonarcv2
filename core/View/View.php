@@ -27,6 +27,16 @@ class View {
         if (!file_exists($path)) {
             throw new Exception("View template not found: {$template}");
         }
+
+        if (!isset($params['csrfToken'])) {
+            try {
+                $container = \Core\Application::getInstance()->getContainer();
+                $security = $container->get(\Core\Security::class);
+                $params['csrfToken'] = $security->generateCsrfToken();
+            } catch (\Throwable $e) {
+                // Fail-safe fallback
+            }
+        }
         
         extract($params);
         

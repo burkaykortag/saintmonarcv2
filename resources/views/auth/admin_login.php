@@ -1,3 +1,7 @@
+<?php
+$security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
+$csrfToken = $security->generateCsrfToken();
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -135,6 +139,7 @@
             <?php endif; ?>
 
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <div class="form-group">
                     <label for="username">Kullanıcı Adı</label>
                     <input type="text" id="username" name="username" required placeholder="admin">

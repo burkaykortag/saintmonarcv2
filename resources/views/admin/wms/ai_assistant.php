@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – AI Akıllı Depo Asistanı | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
 <style>
 .ai-card {
@@ -73,4 +73,4 @@ include dirname(dirname(__DIR__)) . '/layouts/header.php';
         <?php endforeach; ?>
     </div>
 </div>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

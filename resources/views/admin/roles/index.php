@@ -223,7 +223,8 @@
                     <div class="actions">
                         <a href="<?= url('/admin/roles/edit?id=' . $role['id']) ?>" class="btn btn-secondary" style="padding: 8px 16px;">Düzenle</a>
                         <?php if ($role['id'] !== 1): ?>
-                            <form action="<?= url('/admin/roles/toggle') ?>" method="POST" style="display:inline;">
+                             <form action="<?= url('/admin/roles/toggle') ?>" method="POST" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                                 <input type="hidden" name="id" value="<?= $role['id'] ?>">
                                 <button type="submit" class="btn btn-secondary" style="padding: 8px 16px;">
                                     <?= $role['is_active'] ? 'Pasifleştir' : 'Aktifleştir' ?>
@@ -231,6 +232,7 @@
                             </form>
                             <button class="btn btn-secondary" style="padding: 8px 16px;" onclick="openDuplicateModal(<?= $role['id'] ?>, '<?= htmlspecialchars($role['name']) ?>')">Kopyala</button>
                             <form action="<?= url('/admin/roles/delete') ?>" method="POST" style="display:inline;" onsubmit="return confirm('Bu rolü silmek istediğinize emin misiniz?');">
+                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                                 <input type="hidden" name="id" value="<?= $role['id'] ?>">
                                 <button type="submit" class="btn btn-danger" style="padding: 8px 16px;">Sil</button>
                             </form>
@@ -246,6 +248,7 @@
         <div class="modal-content">
             <h3>Rolü Kopyala</h3>
             <form action="<?= url('/admin/roles/duplicate') ?>" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <input type="hidden" id="duplicate_id" name="id">
                 <label style="font-size:12px; color:#94a3b8; display:block; margin-bottom:6px;">Yeni Rol Adı</label>
                 <input type="text" id="new_role_name" name="name" required>

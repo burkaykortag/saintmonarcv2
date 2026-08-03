@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use Core\Http\Controller;
 use Core\Http\Request;
 use Core\Http\Response;
+use Core\View\View;
 use App\Repositories\WarehouseRepository;
 use App\Services\WarehouseService;
 use Exception;
@@ -15,9 +17,11 @@ class WarehouseController extends Controller {
     private WarehouseService $service;
 
     public function __construct(
+        View $view,
         WarehouseRepository $repository,
         WarehouseService $service
     ) {
+        parent::__construct($view);
         $this->repository = $repository;
         $this->service = $service;
     }

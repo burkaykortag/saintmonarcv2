@@ -80,6 +80,7 @@ include dirname(dirname(__DIR__)) . '/layouts/header.php';
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
                                 <form action="<?= url('/admin/attributes/sets/delete') ?>" method="POST" onsubmit="return confirm('Bu özellik grubunu silmek istediğinize emin misiniz?');" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                                     <input type="hidden" name="id" value="<?= $set['id'] ?>">
                                     <button type="submit" class="btn btn-sm btn-danger bg-opacity-10 border-0 p-2" title="Sil">
                                         <i class="bi bi-trash text-danger"></i>

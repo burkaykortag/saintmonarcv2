@@ -58,7 +58,7 @@ class WorkflowController extends Controller
 
     public function edit(Request $request, Response $response)
     {
-        $id = (int)$request->getRouteParam('id');
+        $id = (int)($request->getRouteParam('id') ?: $request->get('id'));
         $workflow = $this->service->getWorkflow($id);
         if (!$workflow) {
             return $response->redirect(url('/admin/workflows?error=not_found'));

@@ -440,9 +440,9 @@ $st = $statusMap[$product['status'] ?? 'draft'] ?? ['Bilinmiyor', 'muted'];
             <div class="price-grid">
               <?php
               $priceFields = [
-                ['list_price','Liste Fiyatı','Önerilen perakende fiyatı'],
+                ['compare_at_price','Liste Fiyatı','Önerilen perakende fiyatı'],
                 ['price','Satış Fiyatı *','Müşteriye gösterilen fiyat'],
-                ['sale_price','Kampanya Fiyatı','İndirimli fiyat (kampanyada gösterilir)'],
+                ['special_price','Kampanya Fiyatı','İndirimli fiyat (kampanyada gösterilir)'],
                 ['cost_price','Maliyet','Ürün maliyeti (marj hesabı için)'],
                 ['dealer_price','Bayi Fiyatı','Yetkili bayi özel fiyatı'],
                 ['wholesale_price','Toptan Fiyat','Toplu sipariş fiyatı'],
@@ -484,8 +484,8 @@ $st = $statusMap[$product['status'] ?? 'draft'] ?? ['Bilinmiyor', 'muted'];
           <div class="pim-section">
             <div class="pim-section-title mb-3"><i class="bi bi-calendar-event"></i>Kampanya Takvimi</div>
             <div class="row g-3">
-              <div class="col-md-6"><label class="pim-form-label">Kampanya Başlangıç</label><input class="pim-input" type="datetime-local" name="sale_starts_at" value="<?= $product['sale_starts_at'] ? date('Y-m-d\TH:i', strtotime($product['sale_starts_at'])) : '' ?>"></div>
-              <div class="col-md-6"><label class="pim-form-label">Kampanya Bitiş</label><input class="pim-input" type="datetime-local" name="sale_ends_at" value="<?= $product['sale_ends_at'] ? date('Y-m-d\TH:i', strtotime($product['sale_ends_at'])) : '' ?>"></div>
+              <div class="col-md-6"><label class="pim-form-label">Kampanya Başlangıç</label><input class="pim-input" type="datetime-local" name="special_price_start" value="<?= ($product['special_price_start'] ?? null) ? date('Y-m-d\TH:i', strtotime($product['special_price_start'])) : '' ?>"></div>
+              <div class="col-md-6"><label class="pim-form-label">Kampanya Bitiş</label><input class="pim-input" type="datetime-local" name="special_price_end" value="<?= ($product['special_price_end'] ?? null) ? date('Y-m-d\TH:i', strtotime($product['special_price_end'])) : '' ?>"></div>
             </div>
           </div>
         </div>

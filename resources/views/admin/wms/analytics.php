@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – Depo Analitik Raporları | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
 <style>
 .an-table th {
@@ -133,4 +133,4 @@ include dirname(dirname(__DIR__)) . '/layouts/header.php';
         </div>
     </div>
 </div>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

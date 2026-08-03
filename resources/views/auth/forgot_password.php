@@ -1,3 +1,7 @@
+<?php
+$security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
+$csrfToken = $security->generateCsrfToken();
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -148,6 +152,7 @@
             <?php endif; ?>
 
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <div class="form-group">
                     <label for="email">E-posta Adresi</label>
                     <input type="email" id="email" name="email" required placeholder="örnek@mail.com">

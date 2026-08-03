@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – Depo Yönetimi Dashboard | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
 <div class="pim-module">
     <!-- Header -->
@@ -194,4 +194,4 @@ new Chart(ctxBacklog, {
     }
 });
 </script>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

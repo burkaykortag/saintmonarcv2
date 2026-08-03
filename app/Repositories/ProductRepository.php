@@ -202,7 +202,7 @@ class ProductRepository {
 
         foreach ($variants as &$var) {
             $var['options'] = $this->db->query(
-                "SELECT av.*, avt.value as option_value, a.id as attribute_id, at.name as attribute_name
+                "SELECT av.*, avt.name as option_value, a.id as attribute_id, at.name as attribute_name
                  FROM product_variant_option_values pvov
                  JOIN attribute_values av ON pvov.attribute_value_id = av.id
                  LEFT JOIN attribute_value_translations avt ON av.id = avt.attribute_value_id AND avt.language_id = 1

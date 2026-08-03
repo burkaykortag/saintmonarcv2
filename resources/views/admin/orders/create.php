@@ -33,7 +33,7 @@ $csrfToken = $security->generateCsrfToken();
                     <label class="form-label text-muted fs-7 mb-1">Müşteri Seçin (Kayıtlı)</label>
                     <select name="user_id" class="form-select border-0 text-white fs-7" style="background: rgba(255,255,255,0.03); padding: 10px; border: 1px solid var(--sm-border) !important;">
                         <?php foreach ($users as $u): ?>
-                            <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['name'] . ' (' . $u['email'] . ')') ?></option>
+                            <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['email']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -153,7 +153,7 @@ $csrfToken = $security->generateCsrfToken();
                     <label class="form-label text-muted fs-7 mb-1">Kargo Firması</label>
                     <select name="shipping_method_id" class="form-select border-0 text-white fs-7" style="background: rgba(255,255,255,0.03); padding: 10px; border: 1px solid var(--sm-border) !important;">
                         <?php foreach ($shippingMethods as $sm): ?>
-                            <option value="<?= $sm['id'] ?>"><?= htmlspecialchars($sm['name']) ?></option>
+                            <option value="<?= $sm['id'] ?>">Kargo #<?= $sm['id'] ?> (<?= number_format($sm['price'],2,',','.') ?> ₺)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>

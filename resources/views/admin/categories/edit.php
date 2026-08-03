@@ -17,6 +17,7 @@ include dirname(__DIR__) . '/layouts/header.php';
 <?php endif; ?>
 
 <form action="<?= url('/admin/categories/edit') ?>" method="POST" class="row g-4">
+    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
     <input type="hidden" name="id" value="<?= $category['id'] ?>">
 
     <!-- Left Column: Details -->

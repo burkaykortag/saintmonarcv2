@@ -19,6 +19,7 @@ use App\Controllers\PromotionController;
 use App\Controllers\AiRecommendationController;
 use App\Controllers\SearchController;
 use App\Controllers\VendorController;
+use App\Controllers\MarketplaceAdminController;
 use App\Controllers\FinanceController;
 use App\Controllers\ShippingController;
 use App\Controllers\WorkflowController;

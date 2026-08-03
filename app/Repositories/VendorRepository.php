@@ -486,11 +486,11 @@ class VendorRepository
     public function getPendingProducts(): array
     {
         return $this->db->query(
-            "SELECT p.*, pt.name, v.name as vendor_name, b.name as brand_name
+            "SELECT p.*, pt.name, v.name as vendor_name, bt.name as brand_name
              FROM products p
              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language_id = 1
              LEFT JOIN vendors v ON p.vendor_id = v.id
-             LEFT JOIN brands b ON p.brand_id = b.id
+             LEFT JOIN brand_translations bt ON p.brand_id = bt.brand_id AND bt.language_id = 1
              WHERE p.approval_status = 'pending_review' AND p.deleted_at IS NULL
              ORDER BY p.id DESC"
         );

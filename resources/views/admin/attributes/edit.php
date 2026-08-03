@@ -27,6 +27,7 @@ foreach ($attribute['translations'] ?? [] as $t) {
     <div class="col-12 col-xl-8">
         <div class="p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.01); border: 1px solid var(--sm-border);">
             <form action="<?= url('/admin/attributes/edit') ?>" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <input type="hidden" name="id" value="<?= $attribute['id'] ?>">
 
                 <div class="mb-3">

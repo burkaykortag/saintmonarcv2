@@ -154,6 +154,11 @@ class VendorService
         return $wallet;
     }
 
+    public function listPayments(?int $vendorId = null): array
+    {
+        return $this->repository->listPayments($vendorId);
+    }
+
     public function deposit(int $vendorId, float $amount, string $refType, int $refId, string $description = ''): int
     {
         $this->cache->delete("vendor_wallet_{$vendorId}");

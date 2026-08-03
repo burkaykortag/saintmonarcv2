@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – Picking (Ürün Toplama) | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
 <style>
 .pick-table th {
@@ -178,4 +178,4 @@ function updateProgress() {
     document.getElementById('pickingPercent').textContent = pct + '%';
 }
 </script>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

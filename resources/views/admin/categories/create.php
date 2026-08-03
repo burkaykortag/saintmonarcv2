@@ -17,6 +17,7 @@ include dirname(__DIR__) . '/layouts/header.php';
 <?php endif; ?>
 
 <form action="<?= url('/admin/categories/create') ?>" method="POST" class="row g-4">
+    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
     <!-- Left Column: Details -->
     <div class="col-12 col-xl-8">
         

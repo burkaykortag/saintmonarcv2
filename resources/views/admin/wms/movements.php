@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – Stok Hareket Merkezi | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
 <style>
 .mv-table th {
@@ -144,4 +144,4 @@ include dirname(dirname(__DIR__)) . '/layouts/header.php';
         </div>
     </div>
 </div>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

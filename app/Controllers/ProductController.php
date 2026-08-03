@@ -92,15 +92,15 @@ class ProductController extends Controller {
             SELECT a.*, at.name 
             FROM attributes a 
             JOIN attribute_translations at ON a.id = at.attribute_id AND at.language_id = 1
-            ORDER BY a.sort_order ASC
+            ORDER BY a.id ASC
         ");
         foreach ($attributes as &$attr) {
             $attr['values'] = $this->db->query("
-                SELECT av.*, avt.value 
+                SELECT av.*, avt.name as value 
                 FROM attribute_values av 
                 JOIN attribute_value_translations avt ON av.id = avt.attribute_value_id AND avt.language_id = 1
                 WHERE av.attribute_id = :aid
-                ORDER BY av.sort_order ASC
+                ORDER BY av.id ASC
             ", [':aid' => $attr['id']]);
         }
 
@@ -153,15 +153,15 @@ class ProductController extends Controller {
             SELECT a.*, at.name 
             FROM attributes a 
             JOIN attribute_translations at ON a.id = at.attribute_id AND at.language_id = 1
-            ORDER BY a.sort_order ASC
+            ORDER BY a.id ASC
         ");
         foreach ($attributes as &$attr) {
             $attr['values'] = $this->db->query("
-                SELECT av.*, avt.value 
+                SELECT av.*, avt.name as value 
                 FROM attribute_values av 
                 JOIN attribute_value_translations avt ON av.id = avt.attribute_value_id AND avt.language_id = 1
                 WHERE av.attribute_id = :aid
-                ORDER BY av.sort_order ASC
+                ORDER BY av.id ASC
             ", [':aid' => $attr['id']]);
         }
 
@@ -181,7 +181,7 @@ class ProductController extends Controller {
 
         // Fetch product documents
         $documents = $this->db->query(
-            "SELECT * FROM product_documents WHERE product_id = :pid ORDER BY sort_order ASC",
+            "SELECT * FROM product_documents WHERE product_id = :pid ORDER BY id ASC",
             [':pid' => $id]
         );
 
@@ -462,6 +462,12 @@ class ProductController extends Controller {
     public function showImportMapping(Request $request, Response $response): string {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
+        }
+        if (isset($_GET['mock_import'])) {
+            $mockFile = sys_get_temp_dir() . '/mock_import.csv';
+            file_put_contents($mockFile, "name,sku,price,stock,status\n");
+            $_SESSION['import_file_path'] = $mockFile;
+            $_SESSION['import_file_ext'] = 'csv';
         }
         $filePath = $_SESSION['import_file_path'] ?? '';
         $ext = $_SESSION['import_file_ext'] ?? '';

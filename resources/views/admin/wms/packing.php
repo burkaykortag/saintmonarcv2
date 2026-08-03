@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – Packing Station (Paketleme İstasyonu) | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
 <style>
 .station-card {
@@ -133,4 +133,4 @@ function completePacking() {
     location.href = '<?= url("/admin/wms/dashboard") ?>';
 }
 </script>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

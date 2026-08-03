@@ -147,8 +147,9 @@ $fraudAlerts = [
                     </thead>
                     <tbody>
                     <?php foreach($transactions as $t):
-                        $riskColor = $t['risk_score'] >= 80 ? '#ef4444' : ($t['risk_score'] >= 50 ? '#f59e0b' : '#10b981');
-                        $riskLabel = $t['risk_score'] >= 80 ? 'Yüksek' : ($t['risk_score'] >= 50 ? 'Orta' : 'Düşük');
+                        $riskScore = (int)($t['risk_score'] ?? 0);
+                        $riskColor = $riskScore >= 80 ? '#ef4444' : ($riskScore >= 50 ? '#f59e0b' : '#10b981');
+                        $riskLabel = $riskScore >= 80 ? 'Yüksek' : ($riskScore >= 50 ? 'Orta' : 'Düşük');
                     ?>
                     <tr>
                         <td>
@@ -157,18 +158,16 @@ $fraudAlerts = [
                             </a>
                         </td>
                         <td><?= htmlspecialchars(($t['billing_first_name']??'').' '.($t['billing_last_name']??'')) ?></td>
-                        <td>
-                            <span style="display:inline-flex;align-items:center;gap:4px;color:<?= $t['method_color']??'#64748b' ?>">
+                        <td><span style="display:inline-flex;align-items:center;gap:4px;color:<?= $t['method_color']??'#64748b' ?>">
                                 <i class="bi <?= $t['method_icon']??'bi-credit-card' ?>"></i>
                                 <span style="font-size:11px"><?= htmlspecialchars($t['method_name']??'') ?></span>
-                            </span>
-                        </td>
-                        <td style="font-weight:600;color:var(--pim-text)">₺<?= number_format($t['amount'],2,',','.') ?></td>
-                        <td style="color:#ef4444">₺<?= number_format($t['commission'],2,',','.') ?></td>
-                        <td style="color:#10b981;font-weight:600">₺<?= number_format($t['net'],2,',','.') ?></td>
+                            </span></td>
+                        <td style="font-weight:600;color:var(--pim-text)">&#x20BA;<?= number_format($t['amount'],2,',','.') ?></td>
+                        <td style="color:#ef4444">&#x20BA;<?= number_format($t['commission']??0,2,',','.') ?></td>
+                        <td style="color:#10b981;font-weight:600">&#x20BA;<?= number_format($t['net']??$t['amount'],2,',','.') ?></td>
                         <td>
                             <span class="risk-badge" style="background:<?= $riskColor ?>18;color:<?= $riskColor ?>;border:1px solid <?= $riskColor ?>44">
-                                <?= $t['risk_score'] ?>% <?= $riskLabel ?>
+                                <?= $riskScore ?>% <?= $riskLabel ?>
                             </span>
                         </td>
                         <td>

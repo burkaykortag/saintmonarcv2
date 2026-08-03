@@ -66,6 +66,7 @@ $csrfToken = $security->generateCsrfToken();
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="#" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <div class="modal-body row g-3 fs-8">
                     <div class="col-12">
                         <label class="form-label text-muted fs-8 font-weight-700 text-uppercase">Tedarikçi Seçin *</label>

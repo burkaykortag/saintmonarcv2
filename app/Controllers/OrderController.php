@@ -133,7 +133,7 @@ class OrderController extends Controller {
         $products = $this->productRepository->getAll();
         $paymentMethods = $this->db->query("SELECT * FROM payment_methods");
         $shippingMethods = $this->db->query("SELECT * FROM shipping_methods");
-        $users = $this->db->query("SELECT id, name, email FROM users WHERE deleted_at IS NULL LIMIT 100");
+        $users = $this->db->query("SELECT id, email FROM users WHERE deleted_at IS NULL LIMIT 100");
 
         return $this->render('admin/orders/create', [
             'products' => $products,
@@ -1100,7 +1100,11 @@ class OrderController extends Controller {
             $item['quantity_pending'] = $item['quantity'] - $item['quantity_shipped'];
         }
 
-        $shippingMethods = $this->db->query("SELECT * FROM shipping_methods") ?? [];
+        $shippingMethods = $this->db->query(
+            "SELECT sm.*, smt.name, smt.description 
+             FROM shipping_methods sm
+             LEFT JOIN shipping_method_translations smt ON sm.id = smt.shipping_method_id AND smt.language_id = 1"
+        ) ?? [];
 
         return $this->render('admin/orders/partial_shipment', [
             'order' => $order,

@@ -77,6 +77,7 @@ include dirname(__DIR__) . '/layouts/header.php';
     </div>
     <div class="d-flex gap-2">
         <form action="<?= url('/admin/brands/bulk') ?>" method="POST" id="bulkForm" class="d-flex align-items-center gap-2">
+            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
             <input type="hidden" name="action" id="bulkActionInput" value="">
             <div id="bulkIdsContainer"></div>
             
@@ -144,6 +145,7 @@ include dirname(__DIR__) . '/layouts/header.php';
                                     <a href="<?= url('/brands/' . $brand['slug']) ?>" target="_blank" class="btn btn-secondary py-1 px-3" style="font-size:11px;"><i class="bi bi-eye me-1"></i> Önizle</a>
                                     <a href="<?= url('/admin/brands/edit?id=' . $brand['id']) ?>" class="btn btn-secondary py-1 px-3" style="font-size:11px;"><i class="bi bi-pencil-square me-1"></i> Düzenle</a>
                                     <form action="<?= url('/admin/brands/delete') ?>" method="POST" onsubmit="return confirm('Bu markayı silmek istediğinize emin misiniz?');" class="m-0">
+                                        <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                                         <input type="hidden" name="id" value="<?= $brand['id'] ?>">
                                         <button type="submit" class="btn btn-danger py-1 px-3" style="font-size:11px;"><i class="bi bi-trash me-1"></i> Sil</button>
                                     </form>

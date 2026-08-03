@@ -1,3 +1,7 @@
+<?php
+$security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
+$csrfToken = $security->generateCsrfToken();
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -119,6 +123,7 @@
             <?php endif; ?>
 
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>">
                 <div class="form-group">
                     <label for="password">Yeni Şifre</label>

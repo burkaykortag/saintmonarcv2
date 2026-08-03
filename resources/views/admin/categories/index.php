@@ -4,6 +4,9 @@ use App\Helpers\ComponentHelper;
 $title = "Kategori Yönetimi - SaintMonarc";
 include dirname(__DIR__) . '/layouts/header.php';
 
+$security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
+$GLOBALS['csrfToken'] = $security->generateCsrfToken();
+
 // Helper function to render hierarchical tree rows in the table
 function renderCategoryTree(array $nodes, int $level = 0): void {
     foreach ($nodes as $node) {
@@ -33,6 +36,7 @@ function renderCategoryTree(array $nodes, int $level = 0): void {
         echo '<div class="d-flex justify-content-end gap-2">';
         echo '<a href="' . url('/admin/categories/edit?id=' . $node['id']) . '" class="btn btn-secondary py-1 px-3" style="font-size:11px;"><i class="bi bi-pencil-square me-1"></i> Düzenle</a>';
         echo '<form action="' . url('/admin/categories/delete') . '" method="POST" onsubmit="return confirm(\'Kategoriyi ve TÜM ALT kategorilerini silmek istediğinize emin misiniz?\');" class="m-0">';
+        echo '<input type="hidden" name="csrf_token" value="' . $GLOBALS['csrfToken'] . '">';
         echo '<input type="hidden" name="id" value="' . $node['id'] . '">';
         echo '<button type="submit" class="btn btn-danger py-1 px-3" style="font-size:11px;"><i class="bi bi-trash me-1"></i> Sil</button>';
         echo '</form>';
@@ -119,6 +123,7 @@ function renderCategoryTree(array $nodes, int $level = 0): void {
     </div>
     <div class="d-flex gap-2">
         <form action="<?= url('/admin/categories/bulk') ?>" method="POST" id="bulkForm" class="d-flex align-items-center gap-2">
+            <input type="hidden" name="csrf_token" value="<?= $GLOBALS['csrfToken'] ?>">
             <input type="hidden" name="action" id="bulkActionInput" value="">
             <div id="bulkIdsContainer"></div>
             

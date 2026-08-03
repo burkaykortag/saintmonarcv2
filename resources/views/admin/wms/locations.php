@@ -1,7 +1,7 @@
 <?php
 use App\Helpers\ComponentHelper;
 $title = 'WMS – Lokasyonlar & Heat Map | SaintMonarc';
-include dirname(dirname(__DIR__)) . '/layouts/header.php';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
 <style>
 .heat-map-grid {
@@ -137,4 +137,4 @@ function genLoc() {
     document.getElementById('loc_result').textContent = `${aisle}-${rack}-${shelf}-${bin}`;
 }
 </script>
-<?php include dirname(dirname(__DIR__)) . '/layouts/footer.php'; ?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

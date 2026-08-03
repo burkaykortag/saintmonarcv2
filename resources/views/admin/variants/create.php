@@ -17,6 +17,7 @@ include dirname(__DIR__) . '/layouts/header.php';
 
 <div class="p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.01); border: 1px solid var(--sm-border);">
     <form action="<?= url('/admin/variants/create') ?>" method="POST" id="variantForm">
+        <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
         <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
 
         <h5 class="text-white mb-3 font-weight-600">Varyant Özellik Seçimleri</h5>
@@ -136,7 +137,7 @@ include dirname(__DIR__) . '/layouts/header.php';
 </div>
 
 <!-- Modal integration -->
-<?php include dirname(dirname(__DIR__)) . '/media/media_picker_modal.php'; ?>
+<?php include dirname(__DIR__) . '/media/media_picker_modal.php'; ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -19,6 +19,7 @@ include dirname(dirname(__DIR__)) . '/layouts/header.php';
     <div class="col-12 col-xl-8">
         <div class="p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.01); border: 1px solid var(--sm-border);">
             <form action="<?= url('/admin/attributes/sets/create') ?>" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <div class="mb-3">
                     <label class="form-label text-muted">Grup Adı (TR)</label>
                     <input type="text" name="name" class="search-input w-100" required placeholder="Örn: Ayakkabı Özellikleri, Tekstil Özellikleri">

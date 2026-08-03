@@ -1,3 +1,7 @@
+<?php
+$security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
+$csrfToken = $security->generateCsrfToken();
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -138,6 +142,7 @@
                     </div>
                     <?php if (session_id() !== $session['id']): ?>
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                             <input type="hidden" name="session_id" value="<?= htmlspecialchars($session['id']) ?>">
                             <button type="submit" class="btn-revoke">Oturumu Kapat</button>
                         </form>

@@ -1,3 +1,7 @@
+<?php
+$security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
+$csrfToken = $security->generateCsrfToken();
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -123,6 +127,7 @@
 
         <div class="card">
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
                 <div class="form-group">
                     <label for="name">Rol Adı (Kodlama adı, örn: product_manager)</label>
                     <input type="text" id="name" name="name" required placeholder="product_manager">
