@@ -488,7 +488,8 @@ class OrderController extends Controller {
             <meta charset="utf-8">
             <title><?= htmlspecialchars($order['order_number'], ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars(ucfirst($type), ENT_QUOTES, 'UTF-8') ?></title>
             <style>
-                body { font-family: 'Outfit', 'DejaVu Sans', 'Helvetica Neue', Arial, sans-serif; color: #333; margin: 20px; font-size: 13px; line-height: 1.5; }
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                body { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; color: #333; margin: 20px; font-size: 13px; line-height: 1.5; }
                 .container { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; padding: 30px; border-radius: 8px; background: #fff; }
                 .header { display: flex; justify-content: space-between; border-bottom: 2px solid #c5a880; padding-bottom: 20px; margin-bottom: 20px; }
                 .logo { font-size: 24px; font-weight: bold; color: #c5a880; }

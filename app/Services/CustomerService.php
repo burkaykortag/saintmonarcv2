@@ -40,6 +40,20 @@ class CustomerService {
     }
 
     /**
+     * ID'ye göre müşteri getirir.
+     */
+    public function getById(int $id, bool $withGroup = false): ?array {
+        return $this->repository->getById($id, $withGroup);
+    }
+
+    /**
+     * Müşteriye ait adresleri getirir.
+     */
+    public function getAddresses(int $customerId): array {
+        return $this->repository->getAddresses($customerId);
+    }
+
+    /**
      * Yeni müşteri oluşturur.
      */
     public function create(array $data): int {
@@ -140,42 +154,26 @@ class CustomerService {
      * Müşteri adres kaydı ekler.
      */
     public function addAddress(int $customerId, array $data): int {
-        $isDefaultBilling = !empty($data['is_default_billing']) ? 1 : 0;
-        $isDefaultShipping = !empty($data['is_default_shipping']) ? 1 : 0;
+        $city = trim($data['city'] ?? '');
+        $district = trim($data['district'] ?? ($data['state'] ?? ''));
+        $country = trim($data['country'] ?? 'Türkiye');
 
-        if ($isDefaultBilling) {
-            $this->db->execute("UPDATE customer_addresses SET is_default_billing = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+        if (in_array(mb_strtolower($country, 'UTF-8'), ['türkiye', 'turkey', 'tr'], true)) {
+            if (!empty($city) && !empty($district)) {
+                if (!\App\Helpers\AddressHelper::isValid($city, $district)) {
+                    throw new Exception("Geçersiz İl ({$city}) / İlçe ({$district}) haritalaması.");
+                }
+            }
         }
-        if ($isDefaultShipping) {
-            $this->db->execute("UPDATE customer_addresses SET is_default_shipping = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+
+        if (!empty($data['zip_code']) && in_array(mb_strtolower($country, 'UTF-8'), ['türkiye', 'turkey', 'tr'], true)) {
+            if (!preg_match('/^\d{5}$/', trim($data['zip_code']))) {
+                throw new Exception("Türkiye posta kodu 5 haneli rakamlardan oluşmalıdır.");
+            }
         }
 
-        $this->db->execute(
-            "INSERT INTO customer_addresses (
-                customer_id, title, first_name, last_name, phone, address_line1, address_line2, city, state, country, zip_code,
-                is_default_billing, is_default_shipping, created_at, updated_at
-            ) VALUES (
-                :cid, :title, :fn, :ln, :phone, :addr1, :addr2, :city, :state, :country, :zip, :billing, :shipping, NOW(), NOW()
-            )",
-            [
-                ':cid' => $customerId,
-                ':title' => trim($data['title'] ?? 'Ev'),
-                ':fn' => trim($data['first_name']),
-                ':ln' => trim($data['last_name']),
-                ':phone' => trim($data['phone']),
-                ':addr1' => trim($data['address_line1']),
-                ':addr2' => !empty($data['address_line2']) ? trim($data['address_line2']) : null,
-                ':city' => trim($data['city']),
-                ':state' => !empty($data['state']) ? trim($data['state']) : null,
-                ':country' => $data['country'] ?? 'Türkiye',
-                ':zip' => trim($data['zip_code']),
-                ':billing' => $isDefaultBilling,
-                ':shipping' => $isDefaultShipping
-            ]
-        );
-
-        $id = (int)$this->db->lastInsertId();
-        $this->logActivity($customerId, 'address_add', "Yeni adres eklendi: " . trim($data['title'] ?? 'Ev'));
+        $id = $this->repository->addAddress($customerId, $data);
+        $this->logActivity($customerId, 'address_add', "Yeni adres eklendi: " . trim($data['address_title'] ?? ($data['title'] ?? 'Ev')));
         $this->clearCache();
 
         return $id;
@@ -501,5 +499,50 @@ class CustomerService {
         }
 
         $this->repository->syncTags($customerId, array_map('intval', $tags));
+    }
+
+    /**
+     * Müşteri adresini günceller (IDOR ve İl/İlçe doğrulaması ile).
+     */
+    public function updateAddress(int $addressId, int $customerId, array $data): bool {
+        $city = trim($data['city'] ?? '');
+        $district = trim($data['district'] ?? ($data['state'] ?? ''));
+        $country = trim($data['country'] ?? 'Türkiye');
+
+        if (in_array(mb_strtolower($country, 'UTF-8'), ['türkiye', 'turkey', 'tr'], true)) {
+            if (!empty($city) && !empty($district)) {
+                if (!\App\Helpers\AddressHelper::isValid($city, $district)) {
+                    throw new Exception("Geçersiz İl ({$city}) / İlçe ({$district}) haritalaması.");
+                }
+            }
+        }
+
+        if (!empty($data['zip_code']) && in_array(mb_strtolower($country, 'UTF-8'), ['türkiye', 'turkey', 'tr'], true)) {
+            if (!preg_match('/^\d{5}$/', trim($data['zip_code']))) {
+                throw new Exception("Türkiye posta kodu 5 haneli rakamlardan oluşmalıdır.");
+            }
+        }
+
+        $res = $this->repository->updateAddress($addressId, $customerId, $data);
+        if (!$res) {
+            throw new Exception("Adres bulunamadı veya yetkisiz erişim denemesi (IDOR).");
+        }
+
+        $this->logActivity($customerId, 'address_update', "Adres güncellendi (ID: {$addressId})");
+        $this->clearCache();
+        return $res;
+    }
+
+    /**
+     * Müşteri adresini siler (IDOR korumalı).
+     */
+    public function deleteAddress(int $addressId, int $customerId): bool {
+        $res = $this->repository->deleteAddress($addressId, $customerId);
+        if (!$res) {
+            throw new Exception("Adres bulunamadı veya yetkisiz erişim denemesi (IDOR).");
+        }
+        $this->logActivity($customerId, 'address_delete', "Adres silindi (ID: {$addressId})");
+        $this->clearCache();
+        return $res;
     }
 }

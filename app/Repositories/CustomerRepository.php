@@ -345,4 +345,117 @@ class CustomerRepository {
             );
         }
     }
+
+    /**
+     * Yeni müşteri adresi ekler.
+     */
+    public function addAddress(int $customerId, array $data): int {
+        $isBilling = !empty($data['is_default_billing']) ? 1 : 0;
+        $isShipping = !empty($data['is_default_shipping']) ? 1 : 0;
+
+        if ($isBilling) {
+            $this->db->execute("UPDATE customer_addresses SET is_default_billing = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+        }
+        if ($isShipping) {
+            $this->db->execute("UPDATE customer_addresses SET is_default_shipping = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+        }
+
+        $district = $data['district'] ?? ($data['state'] ?? '');
+
+        $this->db->execute(
+            "INSERT INTO customer_addresses 
+             (customer_id, title, first_name, last_name, phone, address_line1, address_line2, city, state, country, zip_code, is_default_billing, is_default_shipping, created_at)
+             VALUES (:cid, :title, :fn, :ln, :phone, :addr1, :addr2, :city, :state, :country, :zip, :bill, :ship, NOW())",
+            [
+                ':cid' => $customerId,
+                ':title' => $data['address_title'] ?? ($data['title'] ?? 'Adres'),
+                ':fn' => $data['first_name'] ?? '',
+                ':ln' => $data['last_name'] ?? '',
+                ':phone' => $data['phone'] ?? '05000000000',
+                ':addr1' => $data['address_line1'] ?? '',
+                ':addr2' => $data['address_line2'] ?? null,
+                ':city' => $data['city'] ?? '',
+                ':state' => $district,
+                ':country' => $data['country'] ?? 'Türkiye',
+                ':zip' => $data['zip_code'] ?? '',
+                ':bill' => $isBilling,
+                ':ship' => $isShipping
+            ]
+        );
+
+        return (int)$this->db->lastInsertId();
+    }
+
+    /**
+     * Müşteri adresini günceller (IDOR korumalı).
+     */
+    public function updateAddress(int $addressId, int $customerId, array $data): bool {
+        $isBilling = !empty($data['is_default_billing']) ? 1 : 0;
+        $isShipping = !empty($data['is_default_shipping']) ? 1 : 0;
+
+        if ($isBilling) {
+            $this->db->execute("UPDATE customer_addresses SET is_default_billing = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+        }
+        if ($isShipping) {
+            $this->db->execute("UPDATE customer_addresses SET is_default_shipping = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+        }
+
+        $district = $data['district'] ?? ($data['state'] ?? '');
+
+        return $this->db->execute(
+            "UPDATE customer_addresses
+             SET title = :title, first_name = :fn, last_name = :ln, phone = :phone,
+                 address_line1 = :addr1, address_line2 = :addr2, city = :city, state = :state,
+                 country = :country, zip_code = :zip, is_default_billing = :bill, is_default_shipping = :ship, updated_at = NOW()
+             WHERE id = :id AND customer_id = :cid",
+            [
+                ':title' => $data['address_title'] ?? ($data['title'] ?? 'Adres'),
+                ':fn' => $data['first_name'] ?? '',
+                ':ln' => $data['last_name'] ?? '',
+                ':phone' => $data['phone'] ?? '05000000000',
+                ':addr1' => $data['address_line1'] ?? '',
+                ':addr2' => $data['address_line2'] ?? null,
+                ':city' => $data['city'] ?? '',
+                ':state' => $district,
+                ':country' => $data['country'] ?? 'Türkiye',
+                ':zip' => $data['zip_code'] ?? '',
+                ':bill' => $isBilling,
+                ':ship' => $isShipping,
+                ':id' => $addressId,
+                ':cid' => $customerId
+            ]
+        );
+    }
+
+    /**
+     * Müşteri adresini siler (IDOR korumalı).
+     */
+    public function deleteAddress(int $addressId, int $customerId): bool {
+        return $this->db->execute(
+            "DELETE FROM customer_addresses WHERE id = :id AND customer_id = :cid",
+            [':id' => $addressId, ':cid' => $customerId]
+        );
+    }
+
+    /**
+     * Varsayılan fatura adresi olarak ayarlar.
+     */
+    public function setDefaultBillingAddress(int $addressId, int $customerId): bool {
+        $this->db->execute("UPDATE customer_addresses SET is_default_billing = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+        return $this->db->execute(
+            "UPDATE customer_addresses SET is_default_billing = 1 WHERE id = :id AND customer_id = :cid",
+            [':id' => $addressId, ':cid' => $customerId]
+        );
+    }
+
+    /**
+     * Varsayılan teslimat adresi olarak ayarlar.
+     */
+    public function setDefaultShippingAddress(int $addressId, int $customerId): bool {
+        $this->db->execute("UPDATE customer_addresses SET is_default_shipping = 0 WHERE customer_id = :cid", [':cid' => $customerId]);
+        return $this->db->execute(
+            "UPDATE customer_addresses SET is_default_shipping = 1 WHERE id = :id AND customer_id = :cid",
+            [':id' => $addressId, ':cid' => $customerId]
+        );
+    }
 }

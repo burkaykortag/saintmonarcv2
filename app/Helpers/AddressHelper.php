@@ -110,9 +110,29 @@ class AddressHelper {
      * Verify if city and district are correct.
      */
     public static function isValid(string $city, string $district): bool {
-        if (!isset(self::$data[$city])) {
-            return false;
+        $city = trim($city);
+        $district = trim($district);
+
+        // Exact key match
+        if (isset(self::$data[$city])) {
+            foreach (self::$data[$city] as $d) {
+                if (mb_strtolower($d, 'UTF-8') === mb_strtolower($district, 'UTF-8')) {
+                    return true;
+                }
+            }
         }
-        return in_array($district, self::$data[$city], true);
+
+        // Case-insensitive key match
+        foreach (self::$data as $cKey => $districts) {
+            if (mb_strtolower($cKey, 'UTF-8') === mb_strtolower($city, 'UTF-8')) {
+                foreach ($districts as $d) {
+                    if (mb_strtolower($d, 'UTF-8') === mb_strtolower($district, 'UTF-8')) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }
