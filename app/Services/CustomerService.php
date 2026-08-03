@@ -114,6 +114,9 @@ class CustomerService {
             throw new Exception("Müşteri bulunamadı.");
         }
 
+        $data['first_name'] = $data['first_name'] ?? $current['first_name'] ?? '';
+        $data['last_name'] = $data['last_name'] ?? $current['last_name'] ?? '';
+
         $isTransactionOwner = !$this->db->inTransaction();
         if ($isTransactionOwner) {
             $this->db->beginTransaction();
