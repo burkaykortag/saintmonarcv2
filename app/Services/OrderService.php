@@ -607,17 +607,27 @@ class OrderService {
                  WHERE product_id = :pid AND variant_id = :vid",
                 [':qty' => $qty, ':pid' => $productId, ':vid' => $variantId]
             );
+            $this->db->execute("UPDATE products SET total_stock = GREATEST(0, total_stock - :qty) WHERE id = :pid", [':qty' => $qty, ':pid' => $productId]);
         } else {
             $rows = $this->db->query("SELECT stock FROM inventories WHERE product_id = :pid AND (variant_id IS NULL OR variant_id = 0) FOR UPDATE", [':pid' => $productId]);
-            $currentStock = !empty($rows) ? (int)$rows[0]['stock'] : 0;
-            if ($currentStock < $qty) {
-                throw new Exception("Yetersiz stok! Mevcut Stok: {$currentStock}, Talep Edilen: {$qty}");
+            if (!empty($rows)) {
+                $currentStock = (int)$rows[0]['stock'];
+                if ($currentStock < $qty) {
+                    throw new Exception("Yetersiz stok! Mevcut Stok: {$currentStock}, Talep Edilen: {$qty}");
+                }
+                $this->db->execute(
+                    "UPDATE inventories SET stock = stock - :qty 
+                     WHERE product_id = :pid AND (variant_id IS NULL OR variant_id = 0)",
+                    [':qty' => $qty, ':pid' => $productId]
+                );
+            } else {
+                $pRows = $this->db->query("SELECT total_stock FROM products WHERE id = :pid FOR UPDATE", [':pid' => $productId]);
+                $currentStock = !empty($pRows) ? (int)$pRows[0]['total_stock'] : 0;
+                if ($currentStock < $qty) {
+                    throw new Exception("Yetersiz stok! Mevcut Stok: {$currentStock}, Talep Edilen: {$qty}");
+                }
             }
-            $this->db->execute(
-                "UPDATE inventories SET stock = stock - :qty 
-                 WHERE product_id = :pid AND (variant_id IS NULL OR variant_id = 0)",
-                [':qty' => $qty, ':pid' => $productId]
-            );
+            $this->db->execute("UPDATE products SET total_stock = GREATEST(0, total_stock - :qty) WHERE id = :pid", [':qty' => $qty, ':pid' => $productId]);
         }
     }
 
@@ -634,10 +644,11 @@ class OrderService {
         } else {
             $this->db->execute(
                 "UPDATE inventories SET stock = stock + :qty 
-                 WHERE product_id = :pid AND variant_id IS NULL",
+                 WHERE product_id = :pid AND (variant_id IS NULL OR variant_id = 0)",
                 [':qty' => $qty, ':pid' => $productId]
             );
         }
+        $this->db->execute("UPDATE products SET total_stock = total_stock + :qty WHERE id = :pid", [':qty' => $qty, ':pid' => $productId]);
     }
 
     /**

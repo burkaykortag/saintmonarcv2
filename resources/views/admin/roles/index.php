@@ -204,11 +204,21 @@
             </div>
         <?php endif; ?>
 
+        <?php
+        $security = \Core\Application::getInstance()->getContainer()->get(\Core\Security::class);
+        $csrfToken = $security->generateCsrfToken();
+        ?>
+
         <div class="grid">
             <?php foreach ($roles as $role): ?>
                 <div class="card">
                     <div class="role-name">
-                        <span><?= htmlspecialchars($role['name']) ?></span>
+                        <div>
+                            <span><?= htmlspecialchars($role['name']) ?></span>
+                            <?php if (!empty($role['is_system'])): ?>
+                                <span class="badge" style="background: rgba(212,175,55,0.15); color:#d4af37; border:1px solid rgba(212,175,55,0.3); margin-left: 6px;">Sistem Rolü</span>
+                            <?php endif; ?>
+                        </div>
                         <span class="badge <?= $role['is_active'] ? 'badge-active' : 'badge-inactive' ?>">
                             <?= $role['is_active'] ? 'Aktif' : 'Pasif' ?>
                         </span>
@@ -216,26 +226,25 @@
                     <div class="role-desc">
                         <?= htmlspecialchars($role['description'] ?? '') ?>
                     </div>
-                    <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">
-                        Öncelik Seviyesi: <strong><?= $role['priority'] ?></strong>
+                    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; display: flex; gap: 16px;">
+                        <span>Üst Rol: <strong style="color: #e2e8f0;"><?= htmlspecialchars($role['parent_name'] ?? 'Kök Rol (Root)') ?></strong></span>
+                        <span>Seviye (Priority): <strong style="color: #d4af37;"><?= (int)$role['priority'] ?></strong></span>
+                        <span>Kullanıcı: <strong style="color: #e2e8f0;"><?= (int)($role['user_count'] ?? 0) ?></strong></span>
                     </div>
                     
                     <div class="actions">
-                        <a href="<?= url('/admin/roles/edit?id=' . $role['id']) ?>" class="btn btn-secondary" style="padding: 8px 16px;">Düzenle</a>
-                        <?php if ($role['id'] !== 1): ?>
-                             <form action="<?= url('/admin/roles/toggle') ?>" method="POST" style="display:inline;">
-                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
-                                <input type="hidden" name="id" value="<?= $role['id'] ?>">
-                                <button type="submit" class="btn btn-secondary" style="padding: 8px 16px;">
-                                    <?= $role['is_active'] ? 'Pasifleştir' : 'Aktifleştir' ?>
-                                </button>
-                            </form>
-                            <button class="btn btn-secondary" style="padding: 8px 16px;" onclick="openDuplicateModal(<?= $role['id'] ?>, '<?= htmlspecialchars($role['name']) ?>')">Kopyala</button>
-                            <form action="<?= url('/admin/roles/delete') ?>" method="POST" style="display:inline;" onsubmit="return confirm('Bu rolü silmek istediğinize emin misiniz?');">
-                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
-                                <input type="hidden" name="id" value="<?= $role['id'] ?>">
-                                <button type="submit" class="btn btn-danger" style="padding: 8px 16px;">Sil</button>
-                            </form>
+                        <?php if (!empty($role['can_manage'])): ?>
+                            <a href="<?= url('/admin/roles/edit?id=' . $role['id']) ?>" class="btn btn-secondary" style="padding: 8px 16px;">Düzenle</a>
+                            <?php if (empty($role['is_system'])): ?>
+                                <button class="btn btn-secondary" style="padding: 8px 16px;" onclick="openDuplicateModal(<?= $role['id'] ?>, '<?= htmlspecialchars($role['name']) ?>')">Kopyala</button>
+                                <form action="<?= url('/admin/roles/delete') ?>" method="POST" style="display:inline;" onsubmit="return confirm('Bu rolü silmek istediğinize emin misiniz?');">
+                                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                    <input type="hidden" name="id" value="<?= $role['id'] ?>">
+                                    <button type="submit" class="btn btn-danger" style="padding: 8px 16px;">Sil</button>
+                                </form>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span style="font-size: 12px; color: #64748b; align-self: center;">🔒 Yetki Sınırı (Yönetilemez)</span>
                         <?php endif; ?>
                     </div>
                 </div>

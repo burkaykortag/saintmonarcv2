@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 use App\Controllers\AdminAuthController;
 use App\Controllers\RoleController;
+use App\Controllers\AdminUserController;
 use App\Controllers\AdminDashboardController;
 use App\Controllers\MediaController;
 use App\Controllers\CategoryController;
@@ -47,6 +48,18 @@ $router->post('/admin/roles/edit', [RoleController::class, 'update'], ['admin', 
 $router->post('/admin/roles/duplicate', [RoleController::class, 'duplicate'], ['admin', 'permission:manage_users', 'csrf']);
 $router->post('/admin/roles/delete', [RoleController::class, 'delete'], ['admin', 'permission:manage_users', 'csrf']);
 $router->post('/admin/roles/toggle', [RoleController::class, 'toggleStatus'], ['admin', 'permission:manage_users', 'csrf']);
+
+// Admin User Management Routes
+$router->get('/admin/users', [AdminUserController::class, 'index'], ['admin', 'permission:manage_users']);
+$router->get('/admin/users/create', [AdminUserController::class, 'showCreate'], ['admin', 'permission:manage_users']);
+$router->post('/admin/users/create', [AdminUserController::class, 'store'], ['admin', 'permission:manage_users', 'csrf']);
+$router->get('/admin/users/edit', [AdminUserController::class, 'showEdit'], ['admin', 'permission:manage_users']);
+$router->post('/admin/users/edit', [AdminUserController::class, 'update'], ['admin', 'permission:manage_users', 'csrf']);
+$router->post('/admin/users/delete', [AdminUserController::class, 'delete'], ['admin', 'permission:manage_users', 'csrf']);
+$router->get('/admin/users/impersonate', [AdminUserController::class, 'impersonate'], ['admin', 'permission:manage_users']);
+$router->post('/admin/users/impersonate', [AdminUserController::class, 'impersonate'], ['admin', 'permission:manage_users', 'csrf']);
+$router->get('/admin/users/revert-impersonation', [AdminUserController::class, 'revertImpersonation'], ['admin']);
+$router->post('/admin/users/revert-impersonation', [AdminUserController::class, 'revertImpersonation'], ['admin', 'csrf']);
 
 // Media Library Routes (Protected by admin auth and RBAC media permissions)
 $router->get('/admin/media', [MediaController::class, 'index'], ['admin', 'permission:view_media']);

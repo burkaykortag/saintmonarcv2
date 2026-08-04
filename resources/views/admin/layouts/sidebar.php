@@ -791,6 +791,14 @@ $menus = [
         'items' => [
             [
                 'type' => 'link',
+                'id' => 'admin_users',
+                'title' => 'Yönetici Kullanıcıları',
+                'url' => '/admin/users',
+                'permission' => 'manage_users',
+                'icon' => 'bi-people'
+            ],
+            [
+                'type' => 'link',
                 'id' => 'system_roles',
                 'title' => 'Roller ve Yetkiler',
                 'url' => '/admin/roles',

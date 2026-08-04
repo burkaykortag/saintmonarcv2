@@ -308,3 +308,23 @@ $adminUsername = $_SESSION['admin_username'] ?? 'Yönetici';
         </nav>
         
         <div class="container-fluid p-5">
+<?php if (!empty($_SESSION['impersonation']['active'])): ?>
+    <div class="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-4 shadow-lg" style="background: linear-gradient(135deg, #7f1d1d, #991b1b); border: 2px solid #ef4444; color: #ffffff; border-radius: 12px;">
+        <div class="d-flex align-items-center gap-3">
+            <span class="fs-4">⚠️</span>
+            <div>
+                <strong class="text-uppercase tracking-wider fs-6 d-block text-warning" style="color: #fde047 !important;">KULLANICIYA GEÇİŞ MODU (IMPERSONATION)</strong>
+                <span style="font-size: 14px;">
+                    Şu anda <strong><?= htmlspecialchars($_SESSION['impersonation']['target_username'] ?? 'Kullanıcı') ?></strong> kimliği ile oturum açtınız.
+                    (Orijinal Yönetici: <strong><?= htmlspecialchars($_SESSION['impersonation']['original_admin_username'] ?? 'Admin') ?></strong>)
+                </span>
+            </div>
+        </div>
+        <form action="<?= url('/admin/users/revert-impersonation') ?>" method="POST" class="m-0">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+            <button type="submit" class="btn btn-light btn-sm fw-bold px-3 py-2 text-danger shadow">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> ADMİN HESABINA GERİ DÖN
+            </button>
+        </form>
+    </div>
+<?php endif; ?>
