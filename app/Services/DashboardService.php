@@ -48,6 +48,18 @@ class DashboardService {
         // 8. Chart Data (Daily Sales Points inside the date range)
         $chartData = $this->getChartData($start, $end);
 
+        // 9. Additional Real KPI Stats
+        $additionalStats = $this->getAdditionalStats();
+
+        // 10. Multi-period sales (daily / weekly / yearly)
+        $multiPeriod = $this->getMultiPeriodSales();
+
+        // 11. Workflow Stats
+        $workflowStats = $this->getWorkflowStats();
+
+        // 12. Recent Audit Logs (system activity feed)
+        $auditLogs = $this->getRecentAuditLogs(10);
+
         return [
             'filter' => $filter,
             'bounds' => ['start' => $start, 'end' => $end],
@@ -67,8 +79,214 @@ class DashboardService {
             'recent_members' => $recentMembers,
             'category_sales' => $categorySales,
             'chart_data' => $chartData,
-            'procurement' => $this->getProcurementStats()
+            'procurement' => $this->getProcurementStats(),
+            'additional' => $additionalStats,
+            'multi_period' => $multiPeriod,
+            'workflow' => $workflowStats,
+            'audit_logs' => $auditLogs,
         ];
+    }
+
+    /**
+     * Get additional real KPI stats:
+     * - Active carts (updated within last hour)
+     * - Abandoned carts (1-7 days old, still have items)
+     * - Pending refunds
+     * - Pending shipments
+     * - New members (today / last 30 days)
+     * - In-transit orders (shipped, not delivered)
+     */
+    private function getAdditionalStats(): array {
+        try {
+            // Active carts: updated in last 60 minutes
+            $activeCarts = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM carts WHERE updated_at >= DATE_SUB(NOW(), INTERVAL 60 MINUTE)"
+            )[0]['cnt'] ?? 0);
+
+            // Abandoned carts: last updated 24h-7d ago (items still present)
+            $abandonedCarts = (int)($this->db->query(
+                "SELECT COUNT(DISTINCT c.id) as cnt 
+                 FROM carts c 
+                 JOIN cart_items ci ON c.id = ci.cart_id 
+                 WHERE c.updated_at < DATE_SUB(NOW(), INTERVAL 24 HOUR) 
+                 AND c.updated_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
+            )[0]['cnt'] ?? 0);
+
+            // Pending refunds
+            $pendingRefunds = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM refunds WHERE status = 'pending'"
+            )[0]['cnt'] ?? 0);
+
+            // Pending shipments
+            $pendingShipments = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM shipments WHERE status = 'pending'"
+            )[0]['cnt'] ?? 0);
+
+            // New members today
+            $newMembersToday = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM users WHERE DATE(created_at) = CURDATE()"
+            )[0]['cnt'] ?? 0);
+
+            // New members last 30 days
+            $newMembers30d = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM users WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+            )[0]['cnt'] ?? 0);
+
+            // Total members
+            $totalMembers = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM users"
+            )[0]['cnt'] ?? 0);
+
+            // Orders shipped but not delivered (in transit)
+            $inTransitOrders = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM orders WHERE status = 'shipped'"
+            )[0]['cnt'] ?? 0);
+
+            // Critical stock count
+            $criticalStock = (int)($this->db->query(
+                "SELECT COUNT(*) as count FROM products WHERE total_stock BETWEEN 1 AND critical_stock AND deleted_at IS NULL"
+            )[0]['count'] ?? 0);
+
+            return [
+                'active_carts'       => $activeCarts,
+                'abandoned_carts'    => $abandonedCarts,
+                'pending_refunds'    => $pendingRefunds,
+                'pending_shipments'  => $pendingShipments,
+                'new_members_today'  => $newMembersToday,
+                'new_members_30d'    => $newMembers30d,
+                'total_members'      => $totalMembers,
+                'in_transit_orders'  => $inTransitOrders,
+                'critical_stock'     => $criticalStock,
+            ];
+        } catch (\Throwable $t) {
+            return [
+                'active_carts'       => 0,
+                'abandoned_carts'    => 0,
+                'pending_refunds'    => 0,
+                'pending_shipments'  => 0,
+                'new_members_today'  => 0,
+                'new_members_30d'    => 0,
+                'total_members'      => 0,
+                'in_transit_orders'  => 0,
+                'critical_stock'     => 0,
+            ];
+        }
+    }
+
+    /**
+     * Get multi-period sales breakdown (daily, weekly, monthly, yearly totals)
+     */
+    private function getMultiPeriodSales(): array {
+        try {
+            $daily = (float)($this->db->query(
+                "SELECT COALESCE(SUM(grand_total), 0) as total 
+                 FROM orders WHERE DATE(created_at) = CURDATE() AND status != 'cancelled'"
+            )[0]['total'] ?? 0.0);
+
+            $weekly = (float)($this->db->query(
+                "SELECT COALESCE(SUM(grand_total), 0) as total 
+                 FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND status != 'cancelled'"
+            )[0]['total'] ?? 0.0);
+
+            $monthly = (float)($this->db->query(
+                "SELECT COALESCE(SUM(grand_total), 0) as total 
+                 FROM orders WHERE YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW()) AND status != 'cancelled'"
+            )[0]['total'] ?? 0.0);
+
+            $yearly = (float)($this->db->query(
+                "SELECT COALESCE(SUM(grand_total), 0) as total 
+                 FROM orders WHERE YEAR(created_at) = YEAR(NOW()) AND status != 'cancelled'"
+            )[0]['total'] ?? 0.0);
+
+            // Prev week for change calculation
+            $prevWeekly = (float)($this->db->query(
+                "SELECT COALESCE(SUM(grand_total), 0) as total 
+                 FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) 
+                 AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY) AND status != 'cancelled'"
+            )[0]['total'] ?? 0.0);
+
+            return [
+                'daily'          => $daily,
+                'weekly'         => $weekly,
+                'monthly'        => $monthly,
+                'yearly'         => $yearly,
+                'weekly_change'  => $this->calculatePercentageChange($weekly, $prevWeekly),
+            ];
+        } catch (\Throwable $t) {
+            return [
+                'daily'         => 0.0,
+                'weekly'        => 0.0,
+                'monthly'       => 0.0,
+                'yearly'        => 0.0,
+                'weekly_change' => 0.0,
+            ];
+        }
+    }
+
+    /**
+     * Get workflow statistics from workflows + workflow_logs tables
+     */
+    private function getWorkflowStats(): array {
+        try {
+            $totalWorkflows = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM workflows WHERE deleted_at IS NULL"
+            )[0]['cnt'] ?? 0);
+
+            $activeWorkflows = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM workflows WHERE status = 'active' AND deleted_at IS NULL"
+            )[0]['cnt'] ?? 0);
+
+            $totalExecutions = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM workflow_logs"
+            )[0]['cnt'] ?? 0);
+
+            // Success rate: logs with level='error' vs total
+            $errorCount = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM workflow_logs WHERE level = 'error'"
+            )[0]['cnt'] ?? 0);
+
+            $successRate = $totalExecutions > 0
+                ? round((($totalExecutions - $errorCount) / $totalExecutions) * 100, 1)
+                : 100.0;
+
+            // Executions today
+            $todayExecutions = (int)($this->db->query(
+                "SELECT COUNT(*) as cnt FROM workflow_logs WHERE DATE(created_at) = CURDATE()"
+            )[0]['cnt'] ?? 0);
+
+            return [
+                'total'            => $totalWorkflows,
+                'active'           => $activeWorkflows,
+                'total_executions' => $totalExecutions,
+                'today_executions' => $todayExecutions,
+                'success_rate'     => $successRate,
+                'error_count'      => $errorCount,
+            ];
+        } catch (\Throwable $t) {
+            return [
+                'total'            => 0,
+                'active'           => 0,
+                'total_executions' => 0,
+                'today_executions' => 0,
+                'success_rate'     => 0.0,
+                'error_count'      => 0,
+            ];
+        }
+    }
+
+    /**
+     * Get recent audit log entries for the system activity feed
+     */
+    private function getRecentAuditLogs(int $limit = 10): array {
+        try {
+            return $this->db->query(
+                "SELECT al.event, al.auditable_type, al.auditable_id, al.ip_address, al.created_at
+                 FROM audit_logs al
+                 ORDER BY al.created_at DESC LIMIT {$limit}"
+            );
+        } catch (\Throwable $t) {
+            return [];
+        }
     }
 
     private function getProcurementStats(): array {
@@ -265,11 +483,6 @@ class DashboardService {
     }
 
     private function getRecentOrders(int $limit): array {
-        $sql = "SELECT o.*, CONCAT(up.first_name, ' ', up.last_name) as customer_name
-                FROM orders o
-                JOIN user_profiles up ON o.user_id = up.user_id
-                ORDER BY o.id DESC LIMIT :limit";
-        // Convert limit to numeric bypass for raw execution if bindParam behaves strictly
         return $this->db->query("SELECT o.*, CONCAT(up.first_name, ' ', up.last_name) as customer_name
                                  FROM orders o
                                  JOIN user_profiles up ON o.user_id = up.user_id

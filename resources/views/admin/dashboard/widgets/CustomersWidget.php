@@ -7,7 +7,12 @@ class CustomersWidget
 {
     public static function render(array $data): string
     {
-        $aov = number_format($data['aov'] ?? 0.00, 2, ',', '.');
+        $aovVal = (float)($data['aov'] ?? 0.00);
+        $aov = number_format($aovVal, 2, ',', '.');
+        $change = (float)($data['aov_change'] ?? 0.0);
+        $class = $change >= 0 ? 'text-success' : 'text-danger';
+        $icon = $change >= 0 ? 'bi-arrow-up-short' : 'bi-arrow-down-short';
+
         return "
             <div class=\"card p-4 border-0 h-100\">
                 <div class=\"d-flex align-items-center justify-content-between mb-3\">
@@ -16,7 +21,7 @@ class CustomersWidget
                 </div>
                 <h3 class=\"font-weight-800 m-0 text-white\" style=\"font-size: 28px;\">₺{$aov}</h3>
                 <div class=\"d-flex align-items-center justify-content-between mt-3\">
-                    <span class=\"text-success font-weight-600 fs-7\"><i class=\"bi bi-arrow-up-short\"></i> %3.5 artış</span>
+                    <span class=\"{$class} font-weight-600 fs-7\"><i class=\"bi {$icon}\"></i> " . ($change >= 0 ? '+' : '') . number_format($change, 1) . "% Değişim</span>
                     <span class=\"text-muted fs-8\">Filtreli Dönem</span>
                 </div>
             </div>

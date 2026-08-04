@@ -7,8 +7,9 @@ class ProductsWidget
 {
     public static function render(array $data): string
     {
-        $total = $data['total_products'] ?? 142;
-        $critical = $data['critical_stock'] ?? 3;
+        $total = (int)($data['total_products'] ?? 0);
+        $critical = (int)($data['critical_stock'] ?? 0);
+        $active = (int)($data['active_products'] ?? 0);
 
         return "
             <div class=\"card p-4 border-0 h-100\">
@@ -19,7 +20,7 @@ class ProductsWidget
                 <h3 class=\"font-weight-800 m-0 text-white\" style=\"font-size: 28px;\">{$total} Ürün</h3>
                 <div class=\"d-flex align-items-center justify-content-between mt-3 fs-8 text-muted\" style=\"font-size: 13px;\">
                     <span class=\"text-danger font-weight-600\"><i class=\"bi bi-exclamation-triangle-fill\"></i> {$critical} Kritik Stok</span>
-                    <span>Tüm Depolar</span>
+                    <span class=\"text-success font-weight-600\"><i class=\"bi bi-check-circle-fill\"></i> {$active} Aktif</span>
                 </div>
             </div>
         ";

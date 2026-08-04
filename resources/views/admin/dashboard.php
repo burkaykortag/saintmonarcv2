@@ -20,9 +20,16 @@ use Resources\Views\Admin\Dashboard\Widgets\WidgetMarketWidget;
 
 $title = "Dashboard V3 - SaintMonarc Executive Analytics & BI";
 
-// Prepare data variables
-$sales = $analytics['sales'] ?? ['total_sales' => 14890.00, 'total_sales_change' => 4.5, 'order_count' => 12, 'order_count_change' => 2.1, 'aov' => 1240.83, 'aov_change' => 1.2];
-$stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 135, 'passive_products' => 4, 'draft_products' => 3, 'critical_stock' => 3];
+// Prepare data variables – all from real DB via DashboardService
+$sales      = $analytics['sales']       ?? ['total_sales' => 0, 'total_sales_change' => 0, 'order_count' => 0, 'order_count_change' => 0, 'aov' => 0, 'aov_change' => 0, 'cost_total' => 0, 'profit_total' => 0];
+$stock      = $analytics['stock']       ?? ['total_products' => 0, 'active_products' => 0, 'passive_products' => 0, 'draft_products' => 0, 'critical_stock' => 0];
+$add        = $analytics['additional']  ?? ['active_carts' => 0, 'abandoned_carts' => 0, 'pending_refunds' => 0, 'pending_shipments' => 0, 'new_members_today' => 0, 'new_members_30d' => 0, 'total_members' => 0, 'in_transit_orders' => 0, 'critical_stock' => 0];
+$mp         = $analytics['multi_period'] ?? ['daily' => 0, 'weekly' => 0, 'monthly' => 0, 'yearly' => 0, 'weekly_change' => 0];
+$wf         = $analytics['workflow']    ?? ['total' => 0, 'active' => 0, 'total_executions' => 0, 'today_executions' => 0, 'success_rate' => 0, 'error_count' => 0];
+$auditLogs  = $analytics['audit_logs'] ?? [];
+$recentOrders = $analytics['recent_orders'] ?? [];
+// Derived KPI helpers
+$profitRatio = ($sales['total_sales'] > 0) ? round(($sales['profit_total'] / $sales['total_sales']) * 100, 1) : 0;
 ?>
 
 <!-- Custom CSS for Draggable & Premium Dashboard V3 BI Elements -->
@@ -260,148 +267,151 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
 
 <!-- 1. KPI BLOKLARI (Sayaç Animasyonlu) -->
 <div class="row g-3 mb-4">
-    <!-- Günlük Ciro -->
+    <!-- Günlük Ciro (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Günlük Ciro</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="14890" data-prefix="₺">₺0</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> +%4.5</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= round($mp['daily']) ?>" data-prefix="₺">₺0</h5>
+            <span class="<?= $mp['daily'] > 0 ? 'text-success' : 'text-muted' ?> fs-9"><i class="bi bi-calendar-day"></i> Bugün</span>
         </div>
     </div>
-    <!-- Haftalık Ciro -->
+    <!-- Haftalık Ciro (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Haftalık Ciro</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="104230" data-prefix="₺">₺0</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> +%8.1</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= round($mp['weekly']) ?>" data-prefix="₺">₺0</h5>
+            <?php $wkChg = $mp['weekly_change']; ?>
+            <span class="<?= $wkChg >= 0 ? 'text-success' : 'text-danger' ?> fs-9"><i class="bi bi-arrow-<?= $wkChg >= 0 ? 'up' : 'down' ?>-short"></i> <?= $wkChg >= 0 ? '+' : '' ?><?= number_format($wkChg, 1) ?>%</span>
         </div>
     </div>
-    <!-- Aylık Ciro -->
+    <!-- Aylık Ciro (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Aylık Ciro</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="416920" data-prefix="₺">₺0</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> +%12.8</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= round($mp['monthly']) ?>" data-prefix="₺">₺0</h5>
+            <span class="text-muted fs-9"><i class="bi bi-calendar-month"></i> Bu Ay</span>
         </div>
     </div>
-    <!-- Yıllık Ciro -->
+    <!-- Yıllık Ciro (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Yıllık Ciro</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="5120400" data-prefix="₺">₺0</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> +%18.4</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= round($mp['yearly']) ?>" data-prefix="₺">₺0</h5>
+            <span class="text-muted fs-9"><i class="bi bi-calendar-year"></i> <?= date('Y') ?></span>
         </div>
     </div>
-    <!-- AOV -->
+    <!-- AOV (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Ortalama Sipariş (AOV)</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="1240" data-prefix="₺">₺0</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> +%1.2</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= round($sales['aov']) ?>" data-prefix="₺">₺0</h5>
+            <?php $aovChg = $sales['aov_change'] ?? 0; ?>
+            <span class="<?= $aovChg >= 0 ? 'text-success' : 'text-danger' ?> fs-9"><i class="bi bi-arrow-<?= $aovChg >= 0 ? 'up' : 'down' ?>-short"></i> <?= $aovChg >= 0 ? '+' : '' ?><?= number_format($aovChg, 1) ?>%</span>
         </div>
     </div>
-    <!-- Net Kar -->
+    <!-- Net Kâr (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Net Kâr</small>
-            <h5 class="font-weight-800 text-success mt-1 mb-1 kpi-counter" data-target="164800" data-prefix="₺">₺0</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> %39.5 Oran</span>
+            <h5 class="font-weight-800 text-success mt-1 mb-1 kpi-counter" data-target="<?= round($sales['profit_total']) ?>" data-prefix="₺">₺0</h5>
+            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> %<?= $profitRatio ?> Oran</span>
         </div>
     </div>
-    <!-- Brüt Kar -->
+    <!-- Brüt Kâr (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Brüt Kâr</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="248100" data-prefix="₺">₺0</h5>
-            <span class="text-muted fs-9">Maliyet: ₺168k</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= round($sales['profit_total']) ?>" data-prefix="₺">₺0</h5>
+            <span class="text-muted fs-9">Maliyet: ₺<?= number_format($sales['cost_total'] / 1000, 1) ?>k</span>
         </div>
     </div>
-    <!-- Karlılık Oranı -->
+    <!-- Karlılık Oranı (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Karlılık Oranı</small>
-            <h5 class="font-weight-800 text-warning mt-1 mb-1 kpi-counter" data-target="50" data-suffix="%">0%</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> Stabil</span>
+            <h5 class="font-weight-800 text-warning mt-1 mb-1 kpi-counter" data-target="<?= $profitRatio ?>" data-suffix="%">0%</h5>
+            <span class="text-<?= $profitRatio >= 30 ? 'success' : ($profitRatio >= 15 ? 'warning' : 'danger') ?> fs-9"><i class="bi bi-graph-up"></i> Marj</span>
         </div>
     </div>
-    <!-- Aktif Sepet -->
+    <!-- Aktif Sepet (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Aktif Sepet</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="42" data-suffix=" Adet">0 Adet</h5>
-            <span class="text-info fs-9"><i class="bi bi-eye-fill"></i> Canlı İzleme</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= $add['active_carts'] ?>" data-suffix=" Adet">0 Adet</h5>
+            <span class="text-info fs-9"><i class="bi bi-eye-fill"></i> Son 1 Saat</span>
         </div>
     </div>
-    <!-- Terk Edilen Sepet -->
+    <!-- Terk Edilen Sepet (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Terk Edilen Sepet</small>
-            <h5 class="font-weight-800 text-danger mt-1 mb-1 kpi-counter" data-target="18" data-suffix=" Adet">0 Adet</h5>
-            <span class="text-danger fs-9"><i class="bi bi-bell-fill"></i> Kurtarma Aktif</span>
+            <h5 class="font-weight-800 text-danger mt-1 mb-1 kpi-counter" data-target="<?= $add['abandoned_carts'] ?>" data-suffix=" Adet">0 Adet</h5>
+            <span class="text-danger fs-9"><i class="bi bi-cart-x"></i> 24s-7g Eski</span>
         </div>
     </div>
-    <!-- Donusum Orani -->
+    <!-- Toplam Siparişler (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
-            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Dönüşüm Oranı</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="3" data-decimals="2" data-suffix="%">0%</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> +%0.4</span>
+            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Toplam Sipariş</small>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= $sales['order_count'] ?>" data-suffix=" Adet">0 Adet</h5>
+            <?php $ocChg = $sales['order_count_change'] ?? 0; ?>
+            <span class="<?= $ocChg >= 0 ? 'text-success' : 'text-danger' ?> fs-9"><i class="bi bi-arrow-<?= $ocChg >= 0 ? 'up' : 'down' ?>-short"></i> <?= $ocChg >= 0 ? '+' : '' ?><?= number_format($ocChg, 1) ?>%</span>
         </div>
     </div>
-    <!-- Tekrar Satin Alma -->
+    <!-- Toplam Üye (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
-            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Tekrar Satın Alma</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="24" data-decimals="1" data-suffix="%">0%</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> Sadık Müşteri</span>
+            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Toplam Üye</small>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= $add['total_members'] ?>" data-suffix=" Kişi">0 Kişi</h5>
+            <span class="text-info fs-9"><i class="bi bi-people-fill"></i> Kayıtlı</span>
         </div>
     </div>
-    <!-- Yeni Uye -->
+    <!-- Yeni Üye (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
-            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Yeni Üye</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="15" data-suffix=" Kişi">0 Kişi</h5>
-            <span class="text-success fs-9"><i class="bi bi-arrow-up-short"></i> +%15</span>
+            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Yeni Üye (30g)</small>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= $add['new_members_30d'] ?>" data-suffix=" Kişi">0 Kişi</h5>
+            <span class="text-success fs-9"><i class="bi bi-person-plus"></i> Bugün: <?= $add['new_members_today'] ?></span>
         </div>
     </div>
-    <!-- Aktif Uye -->
+    <!-- Kargodakiler (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
-            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Aktif Üye (Canlı)</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="120" data-suffix=" Çevrimiçi">0 Çevrimiçi</h5>
-            <span class="text-success fs-9"><i class="bi bi-record-fill text-success blink"></i> Sitede</span>
+            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Yolda (Shipped)</small>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= $add['in_transit_orders'] ?>" data-suffix=" Paket">0 Paket</h5>
+            <span class="text-info fs-9"><i class="bi bi-truck"></i> Teslim Edilmedi</span>
         </div>
     </div>
-    <!-- Bekleyen Kargo -->
+    <!-- Bekleyen Kargo (Shipments) (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Bekleyen Kargo</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="8" data-suffix=" Paket">0 Paket</h5>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= $add['pending_shipments'] ?>" data-suffix=" Paket">0 Paket</h5>
             <span class="text-warning fs-9"><i class="bi bi-clock-history"></i> İşlemde</span>
         </div>
     </div>
-    <!-- Iade Bekleyen -->
+    <!-- İade Bekleyen (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">İade Bekleyen</small>
-            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="2" data-suffix=" Talep">0 Talep</h5>
-            <span class="text-info fs-9"><i class="bi bi-check-circle-fill"></i> Kontrol Edilecek</span>
+            <h5 class="font-weight-800 text-white mt-1 mb-1 kpi-counter" data-target="<?= $add['pending_refunds'] ?>" data-suffix=" Talep">0 Talep</h5>
+            <span class="text-<?= $add['pending_refunds'] > 0 ? 'danger' : 'success' ?> fs-9"><i class="bi bi-arrow-return-left"></i> <?= $add['pending_refunds'] > 0 ? 'Aksiyon Gerekli' : 'Temiz' ?></span>
         </div>
     </div>
-    <!-- Kritik Stok -->
+    <!-- Kritik Stok (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
             <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Kritik Stok Uyarısı</small>
-            <h5 class="font-weight-800 text-danger mt-1 mb-1 kpi-counter" data-target="3" data-suffix=" Ürün">0 Ürün</h5>
-            <span class="text-danger fs-9"><i class="bi bi-exclamation-triangle-fill"></i> Hemen Sipariş</span>
+            <h5 class="font-weight-800 text-danger mt-1 mb-1 kpi-counter" data-target="<?= $stock['critical_stock'] ?>" data-suffix=" Ürün">0 Ürün</h5>
+            <span class="text-danger fs-9"><i class="bi bi-exclamation-triangle-fill"></i> <?= $stock['critical_stock'] > 0 ? 'Hemen Sipariş!' : 'Stok Yeterli' ?></span>
         </div>
     </div>
-    <!-- AI Risk Analizi -->
+    <!-- Workflow Başarı Oranı (Gerçek Veri) -->
     <div class="col-6 col-md-3 col-xl-2">
         <div class="kpi-card p-3">
-            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">AI Risk Skoru</small>
-            <h5 class="font-weight-800 text-success mt-1 mb-1 kpi-counter" data-target="98" data-suffix="%">0%</h5>
-            <span class="text-success fs-9"><i class="bi bi-shield-fill-check"></i> Güvenli Limitte</span>
+            <small class="text-muted text-uppercase font-weight-700 fs-9 d-block">Workflow Başarı</small>
+            <h5 class="font-weight-800 text-success mt-1 mb-1 kpi-counter" data-target="<?= $wf['success_rate'] ?>" data-suffix="%">0%</h5>
+            <span class="text-<?= $wf['success_rate'] >= 95 ? 'success' : 'warning' ?> fs-9"><i class="bi bi-diagram-3"></i> <?= $wf['active'] ?> Aktif Akış</span>
         </div>
     </div>
     <!-- 3. Satın Alma KPI'ları -->
@@ -499,7 +509,7 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
         </a>
     </div>
     <div class="col-6 col-sm-4 col-md-3 col-xl-1.2">
-        <a href="#" onclick="alert('E-Fatura entegrasyonu tetiklendi!'); return false;" class="quick-action-btn">
+        <a href="<?= url('/admin/accounting') ?>" class="quick-action-btn">
             <i class="bi bi-receipt text-warning fs-5"></i>
             <span class="text-white font-weight-600" style="font-size: 11px;">Fatura Kes</span>
         </a>
@@ -511,9 +521,9 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
         </a>
     </div>
     <div class="col-6 col-sm-4 col-md-3 col-xl-1.2">
-        <a href="#" onclick="alert('AI Analiz Başlatıldı!'); return false;" class="quick-action-btn">
+        <a href="<?= url('/admin/reports') ?>" class="quick-action-btn">
             <i class="bi bi-cpu text-purple fs-5"></i>
-            <span class="text-white font-weight-600" style="font-size: 11px;">AI Analiz</span>
+            <span class="text-white font-weight-600" style="font-size: 11px;">Raporlar</span>
         </a>
     </div>
 </div>
@@ -684,7 +694,7 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
                 </div>
             </div>
             <div class="card-body p-0">
-                <?= ActivityWidget::render([]) ?>
+                <?= ActivityWidget::render($auditLogs) ?>
             </div>
         </div>
     </div>
@@ -708,7 +718,7 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
                 </div>
             </div>
             <div class="card-body p-0">
-                <?= WorkflowWidget::render([]) ?>
+                <?= WorkflowWidget::render($wf) ?>
             </div>
         </div>
     </div>
@@ -732,7 +742,7 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
                 </div>
             </div>
             <div class="card-body p-0">
-                <?= ShippingWidget::render([]) ?>
+                <?= ShippingWidget::render($add) ?>
             </div>
         </div>
     </div>
@@ -829,7 +839,7 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
                 </div>
             </div>
             <div class="card-body p-0">
-                <?= RealTimeSalesWidget::render([]) ?>
+                <?= RealTimeSalesWidget::render($recentOrders) ?>
             </div>
         </div>
     </div>
@@ -853,7 +863,7 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
                 </div>
             </div>
             <div class="card-body p-0">
-                <?= ActivityLogWidget::render([]) ?>
+                <?= ActivityLogWidget::render($auditLogs) ?>
             </div>
         </div>
     </div>
@@ -1512,62 +1522,43 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
         }
     }
 
-    // --- REALTIME STREAM SIMULATION ---
+    // --- REALTIME STREAM POLLING ---
     function startRealtimeSimulation() {
-        const cities = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana', 'Trabzon', 'Diyarbakır', 'Muğla', 'Eskişehir'];
-        const customers = ['Kerem Kaya', 'Zeynep Ak', 'Can Öztürk', 'Elif Yurt', 'Mert Şen', 'Selin Bal', 'Emre Tek', 'Merve Çelik'];
-        const products = ['iPhone 15 Pro', 'Nike Pegasus 40', 'Dyson V15 Detect', 'Apple Watch Series 9', 'Zara Overcoat'];
-        const methods = ['Kredi Kartı', 'Havale', 'Kapıda Ödeme', 'Stripe'];
-        const prices = ['₺54.999', '₺3.499', '₺24.999', '₺8.499', '₺4.200'];
-
-        // Live Orders Stream
+        // Real database polling every 15 seconds
         setInterval(() => {
-            const feed = document.getElementById('realtimeSalesFeed');
-            if (!feed) return;
-            
-            const city = cities[Math.floor(Math.random() * cities.length)];
-            const customer = customers[Math.floor(Math.random() * customers.length)];
-            const product = products[Math.floor(Math.random() * products.length)];
-            const method = methods[Math.floor(Math.random() * methods.length)];
-            const price = prices[Math.floor(Math.random() * prices.length)];
-
-            const item = document.createElement('div');
-            item.className = 'p-2.5 rounded-3 mb-2 d-flex justify-content-between align-items-center bg-white bg-opacity-2 border border-white border-opacity-5 fs-8 text-white new-live-item';
-            item.innerHTML = `
-                <div>
-                    <strong class="d-block">${customer} - ${city}</strong>
-                    <small class="text-muted">${product} - ${method}</small>
-                </div>
-                <div class="text-end">
-                    <strong class="text-warning d-block">${price}</strong>
-                    <small class="text-muted">Şimdi</small>
-                </div>
-            `;
-            feed.insertBefore(item, feed.firstChild);
-            if (feed.children.length > 5) {
-                feed.removeChild(feed.lastChild);
-            }
-        }, 4000);
-
-        // Live Activities Log
-        const activities = [
-            { title: 'Yeni Üye Kaydoldu', desc: 'Can Yılmaz platforma üye olarak katıldı.', color: 'bg-success' },
-            { title: 'Workflow Tetiklendi', desc: 'Yeni Üye -> Hoş Geldin E-Postası Gönder akışı tamamlandı.', color: 'bg-info' },
-            { title: 'Stok Güncellemesi', desc: 'Dyson V15 stok adeti 12 -> 11 olarak güncellendi.', color: 'bg-warning' },
-            { title: 'AI Fiyat Önerisi', desc: 'Nike Air Max ürünü için kâr optimizasyon önerisi yayınlandı.', color: 'bg-purple' },
-            { title: 'Ödeme Alındı', desc: 'Sipariş #4892 tutarı Stripe üzerinden çekildi.', color: 'bg-success' }
-        ];
-
-        setInterval(() => {
-            const activityFeed = document.getElementById('realtimeActivityFeed');
-            if (!activityFeed) return;
-
-            const act = activities[Math.floor(Math.random() * activities.length)];
-            const item = document.createElement('div');
-            item.className = 'activity-item border-start border-warning border-opacity-20 ps-3 pb-2.5 position-relative fs-8 text-muted new-live-item';
-            item.style.fontSize = '12.5px';
-            item.innerHTML = `
-                <span class="position-absolute start-0 top-0 translate-middle-x ${act.color} rounded-circle d-inline-block" style="width: 8px; height: 8px; margin-left: -1px;"></span>
+            fetch('/admin?ajax=realtime_feed', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (!data) return;
+                
+                // Update live sales feed if returned
+                if (data.recent_orders && Array.isArray(data.recent_orders)) {
+                    const feed = document.getElementById('realtimeSalesFeed');
+                    if (feed && data.recent_orders.length > 0) {
+                        feed.innerHTML = '';
+                        data.recent_orders.slice(0, 5).forEach(order => {
+                            const item = document.createElement('div');
+                            item.className = 'p-2.5 rounded-3 mb-2 d-flex justify-content-between align-items-center bg-white bg-opacity-2 border border-white border-opacity-5 fs-8 text-white';
+                            item.innerHTML = `
+                                <div>
+                                    <strong class="d-block">${order.customer_name || 'Müşteri'}</strong>
+                                    <small class="text-muted">Sipariş #${order.order_number || order.id} - ${order.payment_method || 'Ödeme'}</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-warning d-block">₺${Number(order.grand_total || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})}</strong>
+                                    <small class="text-muted">${order.created_at || 'Şimdi'}</small>
+                                </div>
+                            `;
+                            feed.appendChild(item);
+                        });
+                    }
+                }
+            })
+            .catch(() => {});
+        }, 15000);
+    }
                 <strong class="text-white d-block">${act.title}</strong>
                 <span>${act.desc}</span>
                 <small class="text-muted d-block mt-0.5">Şimdi</small>
@@ -1699,16 +1690,30 @@ $stock = $analytics['stock'] ?? ['total_products' => 142, 'active_products' => 1
     }
 
     function triggerFilterSimulation() {
-        // Flash KPI counters to simulate refreshing data
+        const filterDate = document.getElementById('dashboardDateFilter')?.value || 'this_month';
+        const vendor     = document.getElementById('dashboardVendorFilter')?.value || 'all';
+        const category   = document.getElementById('dashboardCategoryFilter')?.value || 'all';
+        const brand      = document.getElementById('dashboardBrandFilter')?.value || 'all';
+        const city       = document.getElementById('dashboardCityFilter')?.value || 'all';
+
+        // Animate KPI counters to visually signal load
         animateKpiCounters();
+
+        // Perform real AJAX fetch call to reload analytics data dynamically
+        const url = `/admin?filter=${encodeURIComponent(filterDate)}&vendor=${encodeURIComponent(vendor)}&category=${encodeURIComponent(category)}&brand=${encodeURIComponent(brand)}&city=${encodeURIComponent(city)}`;
         
-        // Randomize chart data slightly to simulate filter changes
-        Object.values(activeCharts).forEach(chart => {
-            if (chart.data.datasets && chart.data.datasets[0]) {
-                chart.data.datasets[0].data = chart.data.datasets[0].data.map(val => val * (0.9 + Math.random() * 0.2));
-                chart.update();
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (response.ok) {
+                // If full page reload is preferred for clean URL state update:
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('filter', filterDate);
+                window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
             }
-        });
+        })
+        .catch(err => console.log('Dashboard filter refresh error:', err));
     }
 
     // --- PERSISTENCE: LOCALSTORAGE SAVING & LOADING ---

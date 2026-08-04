@@ -41,6 +41,15 @@ class AdminDashboardController extends Controller {
         // Fetch metrics
         $analytics = $this->dashboardService->getAnalytics($filter, $startDate, $endDate);
 
+        if ($request->get('ajax') === 'realtime_feed') {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'recent_orders' => $analytics['recent_orders'] ?? [],
+                'audit_logs' => $analytics['audit_logs'] ?? [],
+            ]);
+            exit;
+        }
+
         return $this->render('admin/dashboard', [
             'admin' => $admin,
             'analytics' => $analytics
